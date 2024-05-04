@@ -20,7 +20,6 @@ public class UserMapperImpl implements UserMapper {
                 .roles(user.getRoles())
                 .lastAuthentication(user.getLastAuthentication())
                 .phoneNumber(user.getPhoneNumber())
-                .recipes(user.getRecipes())
                 .build();
         return userDto;
     }
@@ -35,7 +34,6 @@ public class UserMapperImpl implements UserMapper {
                 .roles(userDto.getRoles())
                 .lastAuthentication(userDto.getLastAuthentication())
                 .phoneNumber(userDto.getPhoneNumber())
-                .recipes(userDto.getRecipes())
                 .build();
         return user;
     }

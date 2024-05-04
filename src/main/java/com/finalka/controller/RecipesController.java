@@ -3,6 +3,7 @@ package com.finalka.controller;
 
 import com.finalka.dto.ProductDTO;
 import com.finalka.dto.RecipeDetailsDTO;
+import com.finalka.dto.RecipeWithProductDTO;
 import com.finalka.dto.RecipesDto;
 import com.finalka.service.RecipesService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -98,12 +99,9 @@ public class RecipesController {
     })
     @Operation(summary = "Роут для создание рецепта")
     @PostMapping
-    public ResponseEntity<RecipesDto> save(@RequestBody RecipesDto recipesDto){
-        try {
-            return new ResponseEntity<>(recipeService.save(recipesDto), HttpStatus.CREATED);
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<RecipeWithProductDTO> createRecipeWithProducts(@RequestBody RecipeWithProductDTO recipeDto) {
+        RecipeWithProductDTO createdRecipe = recipeService.createRecipeWithProducts(recipeDto);
+        return ResponseEntity.ok(createdRecipe);
     }
     @ApiResponses(value = {
             @ApiResponse(

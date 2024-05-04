@@ -5,7 +5,11 @@ import com.finalka.dto.MenuDTO;
 import com.finalka.dto.ProductDTO;
 import com.finalka.entity.Menu;
 import com.finalka.entity.Products;
+import com.finalka.entity.Recipes;
+import com.finalka.entity.RecipesWithProducts;
 import com.finalka.repo.ProductRepo;
+import com.finalka.repo.RecipesRepo;
+import com.finalka.repo.RecipesWithProductsRepo;
 import com.finalka.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,31 +28,6 @@ import java.util.Optional;
 @Slf4j
 public class ProductsServiceImpl implements ProductService {
     private final ProductRepo productRepo;
-
-    @Override
-    public ProductDTO save(ProductDTO productDTO) {
-        try {
-            log.info("СТАРТ: ProductsServiceImpl - save() {}", productDTO);
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-
-            Products products = Products.builder()
-                    .productName(productDTO.getProductName())
-                    .createdBy(username)
-                    .createdAt(new Timestamp(System.currentTimeMillis()))
-                    .build();
-            productDTO.setId(productRepo.save(products).getId());
-            productDTO.setCreatedAt(products.getCreatedAt());
-            productDTO.setCreatedBy(username);
-
-        } catch (Exception e) {
-            log.error("Не удалось добавить продукт в базу данных");
-            throw new RuntimeException("Не удалось добавить продукт в базу данных");
-        }
-        log.info("КОНЕЦ: ProductsServiceImpl - save {} ", productDTO);
-        return productDTO;
-
-    }
 
     @Override
     public String delete(Long id) {

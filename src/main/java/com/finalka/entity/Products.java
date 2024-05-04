@@ -1,5 +1,6 @@
 package com.finalka.entity;
 
+import com.finalka.enums.Units;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,9 +23,10 @@ public class Products {
     @SequenceGenerator(name = "products_seq_generator", sequenceName = "products_seq", allocationSize = 1)
     private Long id;
     private String productName;
-    private Date removeDate;
-    @OneToMany(mappedBy = "product")
-    private Set<RecipesWithProducts> recipesWithProducts;
+
+    private Integer quantity;
+    private Units unitsEnum;
+
 
     private String createdBy;
     private Timestamp createdAt;

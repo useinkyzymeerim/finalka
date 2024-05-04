@@ -1,6 +1,7 @@
 package com.finalka.service;
 
 
+import com.finalka.dto.CreateMenuDto;
 import com.finalka.dto.MenuDTO;
 import com.finalka.dto.MenuWithRecipeDTO;
 import com.finalka.entity.Products;
@@ -16,7 +17,7 @@ public interface MenuService {
 
     MenuDTO findById(Long id);
     Map<Products, Integer> calculateRequiredProductsForMenu (Long id);
-    MenuDTO save(MenuDTO menuDTO);
+    CreateMenuDto save(CreateMenuDto menuDTO);
     MenuDTO update(MenuDTO menuDTO);
     String delete(Long id);
 

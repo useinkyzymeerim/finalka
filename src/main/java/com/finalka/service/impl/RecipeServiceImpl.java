@@ -1,14 +1,10 @@
 package com.finalka.service.impl;
 
 
-import com.finalka.dto.ProductDTO;
-import com.finalka.dto.RecipeDetailsDTO;
-import com.finalka.dto.RecipesDto;
-import com.finalka.entity.Products;
-import com.finalka.entity.Recipes;
-import com.finalka.entity.RecipesWithProducts;
-import com.finalka.repo.RecipesRepo;
-import com.finalka.repo.RecipesWithProductsRepo;
+import com.finalka.dto.*;
+import com.finalka.entity.*;
+import com.finalka.enums.Units;
+import com.finalka.repo.*;
 import com.finalka.service.RecipesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +25,9 @@ import java.util.stream.Collectors;
 public class RecipeServiceImpl implements RecipesService {
     private final RecipesRepo recipesRepo;
     private final RecipesWithProductsRepo recipesWithProductsRepo;
+    private final ProductRepo productRepo;
+    private final UserRepo userRepo;
+    private final MenuRepo menuRepo;
 
 
     @Override
@@ -69,29 +68,103 @@ public class RecipeServiceImpl implements RecipesService {
     }
 
     @Override
-    public RecipesDto save(RecipesDto recipesDto) {
+    public RecipeWithProductDTO createRecipeWithProducts(RecipeWithProductDTO recipeDTO) {
         try {
-            log.info("СТАРТ: RecipeServiceImpl - save() {}", recipesDto);
+            log.info("START: RecipeServiceImpl - createRecipeWithProducts() {}", recipeDTO);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
 
-            Recipes recipes = Recipes.builder()
-                    .nameOfFood(recipesDto.getNameOfFood())
+            Recipes recipe = Recipes.builder()
+                    .nameOfFood(recipeDTO.getNameOfFood())
+                    .description(recipeDTO.getDescription())
+                    .imageBase64(recipeDTO.getImageBase64())
+                    .linkOfVideo(recipeDTO.getLinkOfVideo())
+                    .quantityOfProduct(recipeDTO.getQuantityOfProduct())
+                    .cookingTime(recipeDTO.getCookingTime())
                     .createdBy(username)
                     .createdAt(new Timestamp(System.currentTimeMillis()))
                     .build();
-            recipesDto.setId(recipesRepo.save(recipes).getId());
-            recipesDto.setCreatedAt(recipes.getCreatedAt());
-            recipesDto.setCreatedBy(username);
 
+            if (recipeDTO.getMenuId() != null) {
+                Menu menu = menuRepo.findById(recipeDTO.getMenuId())
+                        .orElseThrow(() -> new IllegalArgumentException("Меню с Id " + recipeDTO.getMenuId() + " не найден"));
+                recipe.setMenu(menu);
+            }
+
+            if (recipeDTO.getUserId() != null) {
+                User user = userRepo.findById(recipeDTO.getUserId())
+                        .orElseThrow(() -> new IllegalArgumentException("Пользователь с Id " + recipeDTO.getUserId() + " не найден"));
+                recipe.setUser(user);
+            }
+
+            Recipes savedRecipe = recipesRepo.save(recipe);
+            Long recipeId = savedRecipe.getId();
+
+            // Создаем продукты, связанные с рецептом
+            for (ProductDTO productDTO : recipeDTO.getProducts()) {
+                List<Products> productList = productRepo.findByProductName(productDTO.getProductName());
+
+                if (!productList.isEmpty()) {
+                    for (Products product : productList) {
+                        RecipesWithProducts recipeProduct = new RecipesWithProducts();
+                        recipeProduct.setRecipe(recipe);
+                        recipeProduct.setProduct(product);
+                        recipeProduct.setQuantityOfProduct(productDTO.getQuantity());
+                        recipeProduct.setUnitsEnum(productDTO.getUnitsEnum());
+                        recipesWithProductsRepo.save(recipeProduct);
+                    }
+                } else {
+                    Products product = Products.builder()
+                            .productName(productDTO.getProductName())
+                            .quantity(productDTO.getQuantity())
+                            .unitsEnum(productDTO.getUnitsEnum())
+                            .createdBy(username)
+                            .createdAt(new Timestamp(System.currentTimeMillis()))
+                            .build();
+                    Products savedProduct = productRepo.save(product);
+                    Long productId = savedProduct.getId();
+
+                    addProductToRecipe(productId, recipeId, productDTO.getQuantity(), productDTO.getUnitsEnum());
+                }
+            }
+            log.info("END: RecipeServiceImpl - createRecipeWithProducts {}", recipeDTO);
+            return recipeDTO;
         } catch (Exception e) {
-            log.error("Не удалось добавить рецепт в базу данных");
-            throw new RuntimeException("Не удалось добавить рецепт в базу данных");
+            log.error("Не удалось создать рецепт с продуктом", e);
+            throw new RuntimeException("Не удалось создать рецепт с продуктом", e);
         }
-        log.info("КОНЕЦ: RecipeServiceImpl - save {} ", recipesDto);
-        return recipesDto;
-
     }
+    private void addProductToRecipe(Long productId, Long recipeId, Integer quantity, Units unitsEnum) {
+        try {
+            Optional<Recipes> optionalRecipe = recipesRepo.findById(recipeId);
+            if (optionalRecipe.isPresent()) {
+                Recipes recipe = optionalRecipe.get();
+
+
+                Optional<Products> optionalProduct = productRepo.findById(productId);
+                if (optionalProduct.isPresent()) {
+                    Products product = optionalProduct.get();
+
+                    // Создать связь между продуктом и рецептом в таблице Recipe_Product
+                    RecipesWithProducts recipeProduct = new RecipesWithProducts();
+                    recipeProduct.setRecipe(recipe);
+                    recipeProduct.setProduct(product);
+                    recipeProduct.setQuantityOfProduct(quantity);
+                    recipeProduct.setUnitsEnum(unitsEnum);
+                    recipesWithProductsRepo.save(recipeProduct);
+
+                } else {
+                    throw new IllegalArgumentException("Продукт с id " + productId + " не найден");
+                }
+            } else {
+                throw new IllegalArgumentException("Рецепт с id " + recipeId + " не найден");
+            }
+        } catch (Exception e) {
+            log.error("Не удалость добавить продукт в рецепт", e);
+            throw new RuntimeException("Не удалость добавить продукт в рецепт", e);
+        }
+    }
+
     @Override
     public String delete(Long id) {
         log.info("СТАРТ: RecipeServiceImpl - delete(). Удалить запись с id {}", id);

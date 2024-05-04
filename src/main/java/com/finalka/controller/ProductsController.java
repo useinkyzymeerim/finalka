@@ -31,7 +31,7 @@ public class ProductsController {
                     responseCode = "404",
                     description = "Продукта нет")
     })
-    @Operation(summary = "Роуд возвращает все не удаленные продукты")
+    @Operation(summary = "Роут возвращает все не удаленные продукты")
     @GetMapping("/all")
     public ResponseEntity<List<ProductDTO>> findAll() {
         try {
@@ -43,25 +43,6 @@ public class ProductsController {
         }
     }
 
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Продукт создан успешно ",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ProductDTO.class))}),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Продукт не был добавлен в базу")
-    })
-    @Operation(summary = "Роут для создание меню")
-    @PostMapping
-    public ResponseEntity<ProductDTO> save(@RequestBody ProductDTO productDTO){
-        try {
-            return new ResponseEntity<>(productService.save(productDTO), HttpStatus.CREATED);
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",

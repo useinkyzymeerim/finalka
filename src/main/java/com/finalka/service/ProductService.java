@@ -7,8 +7,6 @@ import java.util.List;
 public interface ProductService {
     ProductDTO findById(Long id);
 
-    ProductDTO save(ProductDTO productDTO);
-
     String delete(Long id);
 
     List<ProductDTO> findAll() throws Exception;
