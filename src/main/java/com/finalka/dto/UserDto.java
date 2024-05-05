@@ -22,5 +22,4 @@ public class UserDto {
 
     private LocalDateTime lastAuthentication;
     private String phoneNumber;
-    private Set<Recipes> recipes;
 }

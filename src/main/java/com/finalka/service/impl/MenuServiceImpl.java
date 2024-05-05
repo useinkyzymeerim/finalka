@@ -1,6 +1,7 @@
 package com.finalka.service.impl;
 
 
+import com.finalka.dto.CreateMenuDto;
 import com.finalka.dto.MenuDTO;
 import com.finalka.dto.MenuWithRecipeDTO;
 import com.finalka.dto.RecipesDto;
@@ -9,6 +10,7 @@ import com.finalka.entity.Products;
 import com.finalka.entity.Recipes;
 import com.finalka.entity.RecipesWithProducts;
 import com.finalka.repo.MenuRepo;
+import com.finalka.repo.RecipesRepo;
 import com.finalka.repo.RecipesWithProductsRepo;
 import com.finalka.service.MenuService;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +28,12 @@ import java.util.*;
 public class MenuServiceImpl implements MenuService {
     private final MenuRepo menuRepo;
     private final RecipesWithProductsRepo recipesWithProductsRepo;
+    private final RecipesRepo recipesRepo;
 
     @Override
-    public MenuDTO save(MenuDTO menuDTO) {
+    public CreateMenuDto save(CreateMenuDto menuDTO) {
         try {
-            log.info("СТАРТ: MenuServiceImpl - save() {}", menuDTO);
+            log.info("START: MenuServiceImpl - save() {}", menuDTO);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
 
@@ -39,17 +42,18 @@ public class MenuServiceImpl implements MenuService {
                     .createdBy(username)
                     .createdAt(new Timestamp(System.currentTimeMillis()))
                     .build();
-            menuDTO.setId(menuRepo.save(menu).getId());
-            menuDTO.setCreatedAt(menu.getCreatedAt());
+
+            Menu savedMenu = menuRepo.save(menu);
+            menuDTO.setId(savedMenu.getId());
+            menuDTO.setCreatedAt(savedMenu.getCreatedAt());
             menuDTO.setCreatedBy(username);
 
+            log.info("END: MenuServiceImpl - save {} ", menuDTO);
+            return menuDTO;
         } catch (Exception e) {
-            log.error("Не удалось добавить меню в базу данных");
-            throw new RuntimeException("Не удалось добавить меню в базу данных");
+            log.error("Failed to save menu", e);
+            throw new RuntimeException("Failed to save menu", e);
         }
-        log.info("КОНЕЦ: MenuServiceImpl - save {} ", menuDTO);
-        return menuDTO;
-
     }
     @Override
     public String delete(Long id) {
@@ -123,7 +127,7 @@ public class MenuServiceImpl implements MenuService {
         Map<Products, Integer> productQuantityMap = new HashMap<>();
 
         for (RecipesWithProducts recipesWithProducts : recipesWithProductsList) {
-            Products product = recipesWithProducts.getProduct();
+            Products product = (Products) recipesWithProducts.getProduct();
             int quantity = recipesWithProducts.getQuantityOfProduct();
 
             int totalQuantity = productQuantityMap.getOrDefault(product, 0) + quantity;
@@ -141,6 +145,8 @@ public class MenuServiceImpl implements MenuService {
             MenuWithRecipeDTO menuWithRecipesDTO = new MenuWithRecipeDTO();
             menuWithRecipesDTO.setMenuId(menu.getId());
             menuWithRecipesDTO.setNameOfMenu(menu.getNameOfMenu());
+
+
 
             List<RecipesDto> recipeDTOList = new ArrayList<>();
             for (Recipes recipe : menu.getRecipes()) {

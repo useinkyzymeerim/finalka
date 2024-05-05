@@ -2,6 +2,7 @@ package com.finalka.service.impl;
 
 
 import com.finalka.dto.UserDto;
+import com.finalka.entity.ProductOfShop;
 import com.finalka.entity.Role;
 import com.finalka.entity.User;
 import com.finalka.mapper.UserMapper;
@@ -9,7 +10,6 @@ import com.finalka.repo.UserRepo;
 import com.finalka.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -50,12 +50,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userRepo.save(user);
         return userMapper.toDto(user);
     }
-
-
-
     @Override
     public UserDto getById(Long id) {
-        User user = userRepo.findById(id).orElseThrow(() -> new RuntimeException("Пользователь с таким id: " + id + " не найден"));
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь с таким id: " + id + " не найден"));
         return userMapper.toDto(user);
     }
 

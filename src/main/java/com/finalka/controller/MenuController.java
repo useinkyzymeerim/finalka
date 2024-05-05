@@ -1,5 +1,6 @@
 package com.finalka.controller;
 
+import com.finalka.dto.CreateMenuDto;
 import com.finalka.dto.MenuDTO;
 import com.finalka.dto.MenuWithRecipeDTO;
 import com.finalka.entity.Products;
@@ -109,7 +110,7 @@ public class MenuController {
     })
     @Operation(summary = "Роут для создание меню")
     @PostMapping
-    public ResponseEntity<MenuDTO> save(@RequestBody MenuDTO menuDTO){
+    public ResponseEntity<CreateMenuDto> save(@RequestBody CreateMenuDto menuDTO){
         try {
             return new ResponseEntity<>(menuService.save(menuDTO), HttpStatus.CREATED);
         } catch (Exception e){

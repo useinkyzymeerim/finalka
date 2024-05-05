@@ -18,8 +18,6 @@ public class MenuDTO {
     private Long id;
     private String nameOfMenu;
 
-    private List<Recipes> recipes = new ArrayList<>();
-
     private String createdBy;
     private Timestamp createdAt;
 

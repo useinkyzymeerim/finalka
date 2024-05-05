@@ -10,9 +10,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Entity
-@Table
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,10 +23,9 @@ public class Menu {
     @SequenceGenerator(name = "menu_seq_generator", sequenceName = "menu_seq", allocationSize = 1)
     private Long id;
     private String nameOfMenu;
-    private Date removeDate;
 
-    @OneToMany
-    private List<Recipes> recipes = new ArrayList<>();
+    @OneToMany(mappedBy = "menu")
+    private List<Recipes> recipes;
 
     private String createdBy;
     private Timestamp createdAt;

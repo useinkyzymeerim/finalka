@@ -1,23 +1,22 @@
 package com.finalka.dto;
 
-import com.finalka.entity.Menu;
-import com.finalka.enums.Units;
+import com.finalka.entity.Recipes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductDTO {
+public class CreateMenuDto {
     private Long id;
-    private String productName;
-    private Integer quantity;
-    private Units unitsEnum;
+    private String nameOfMenu;
 
     private String createdBy;
     private Timestamp createdAt;
@@ -29,3 +28,4 @@ public class ProductDTO {
     private Timestamp deletedAt;
 
 }
+

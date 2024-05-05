@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -21,18 +23,23 @@ public class Recipes {
     @SequenceGenerator(name = "recipes_seq_generator", sequenceName = "recipes_seq", allocationSize = 1)
     private Long id;
     private String nameOfFood;
-    private Date removeDate;
+    private String description;
+    @Lob
+    private String imageBase64;
+    private String linkOfVideo;
+    private Integer quantityOfProduct;
+    private Integer cookingTime;
 
     @OneToMany(mappedBy = "recipe")
-    private Set<RecipesWithProducts> recipesWithProducts;
+    private List<RecipesWithProducts> recipesWithProducts;
 
     @ManyToOne
-    @JoinColumn(name = "menu_id")
     private Menu menu;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
     private User user;
+
+
 
     private String createdBy;
     private Timestamp createdAt;
