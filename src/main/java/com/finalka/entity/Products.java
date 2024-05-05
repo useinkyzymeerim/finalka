@@ -25,6 +25,7 @@ public class Products {
     private String productName;
 
     private Integer quantity;
+    @Enumerated(value = EnumType.STRING)
     private Units unitsEnum;
 
 
