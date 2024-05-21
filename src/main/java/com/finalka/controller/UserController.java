@@ -2,6 +2,7 @@ package com.finalka.controller;
 
 
 import com.finalka.dto.RecipeDetailsDTO;
+import com.finalka.dto.RecipeWithProductDTO;
 import com.finalka.dto.RecipesDto;
 import com.finalka.dto.UserDto;
 import com.finalka.service.RecipesService;
@@ -27,12 +28,6 @@ public class UserController {
 
     private final UserServiceImpl service;
     private final RecipesService recipeService;
-
-
-
-
-
-
     @PutMapping()
     public ResponseEntity<UserDto> update(@RequestBody UserDto userDto) {
         try {
@@ -57,18 +52,6 @@ public class UserController {
     public ResponseEntity<List<RecipeDetailsDTO>> getRecipeDetails(@PathVariable Long recipeId) {
         List<RecipeDetailsDTO> recipeDetails = recipeService.findRecipeDetails(recipeId);
         return ResponseEntity.ok(recipeDetails);
-    }
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Все записи получены успешно",
-                    content = {@Content(mediaType = "application/json")})
-    })
-    @Operation(summary = "Этот роут возвращает Продукт с названием")
-    @GetMapping("/getByProductName")
-    public ResponseEntity<List<RecipesDto>> getRecipesByProduct(@RequestParam String productName) {
-        List<RecipesDto> recipeDTOList = recipeService.findByProduct(productName);
-        return ResponseEntity.ok(recipeDTOList);
     }
     @ApiResponses(value = {
             @ApiResponse(
@@ -101,6 +84,11 @@ public class UserController {
         } catch (NullPointerException nullPointerException){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+    @PostMapping("/search")
+    public ResponseEntity<List<RecipeWithProductDTO>> searchRecipesByProducts(@RequestBody List<String> userProducts) {
+        List<RecipeWithProductDTO> recipes = recipeService.findRecipesByProducts(userProducts);
+        return ResponseEntity.ok(recipes);
     }
 
 }

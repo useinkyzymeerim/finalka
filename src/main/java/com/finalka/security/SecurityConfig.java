@@ -57,7 +57,6 @@ public class SecurityConfig {
         http.authorizeHttpRequests().requestMatchers(HttpMethod.POST, "/api/registration").permitAll();
         http.authorizeHttpRequests().requestMatchers("/api/chefs/**").hasAuthority( "CHEF");
         http.authorizeHttpRequests().requestMatchers("/api/users/**").hasAuthority( "USER");
-
         http.authorizeHttpRequests().anyRequest().authenticated();
         http.apply(CustomSecurityDetails.customDsl(userRepo));
         http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -3,6 +3,7 @@ package com.finalka.controller;
 import com.finalka.dto.CreateMenuDto;
 import com.finalka.dto.MenuDTO;
 import com.finalka.dto.MenuWithRecipeDTO;
+import com.finalka.dto.RecipesDto;
 import com.finalka.entity.Products;
 import com.finalka.service.MenuService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +40,7 @@ public class MenuController {
                     description = "Меню нет")
     })
     @Operation(summary = "Роуд возвращает все не удаленные меню")
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<MenuDTO>> findAll(){
         try {
             return new ResponseEntity<>(menuService.findAll(), HttpStatus.OK);
@@ -70,6 +71,11 @@ public class MenuController {
         } else {
             return new ResponseEntity<>(menuWithRecipes, HttpStatus.OK);
         }
+    }
+    @GetMapping("/{menuId}/recipes")
+    public ResponseEntity<List<RecipesDto>> getRecipesByMenuId(@PathVariable Long menuId) {
+        List<RecipesDto> recipes = menuService.getRecipesByMenuId(menuId);
+        return ResponseEntity.ok(recipes);
     }
     @Operation(summary = "Этот роут возвращает количество всех продуктов в одном меню по айди")
     @ApiResponses(value = {

@@ -13,6 +13,7 @@ import com.finalka.repo.MenuRepo;
 import com.finalka.repo.RecipesRepo;
 import com.finalka.repo.RecipesWithProductsRepo;
 import com.finalka.service.MenuService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -146,8 +148,6 @@ public class MenuServiceImpl implements MenuService {
             menuWithRecipesDTO.setMenuId(menu.getId());
             menuWithRecipesDTO.setNameOfMenu(menu.getNameOfMenu());
 
-
-
             List<RecipesDto> recipeDTOList = new ArrayList<>();
             for (Recipes recipe : menu.getRecipes()) {
                 RecipesDto recipeDTO = new RecipesDto();
@@ -160,6 +160,18 @@ public class MenuServiceImpl implements MenuService {
         });
 
         return menuWithRecipesDTOList;
+    }
+    @Transactional
+    public List<RecipesDto> getRecipesByMenuId(Long menuId) {
+        Menu menu = menuRepo.findById(menuId)
+                .orElseThrow(() -> new RuntimeException("Menu not found"));
+
+        return menu.getRecipes().stream()
+                .map(recipe -> RecipesDto.builder()
+                        .nameOfFood(recipe.getNameOfFood())
+                        .imageBase64(recipe.getImageBase64())
+                        .build())
+                .collect(Collectors.toList());
     }
     @Override
     public MenuDTO update(MenuDTO menuDTO) {
