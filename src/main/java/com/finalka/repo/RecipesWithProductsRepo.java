@@ -10,5 +10,5 @@ import java.util.List;
 public interface RecipesWithProductsRepo extends JpaRepository<RecipesWithProducts,Long> {
 
     List<RecipesWithProducts> findByRecipe_Menu_Id(Long menuId);
-    List<RecipesWithProducts> findByProduct_ProductName(String productName);
+    List<RecipesWithProducts> findByProduct_ProductNameIn(List<String> productNames);
 }

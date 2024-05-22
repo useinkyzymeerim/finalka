@@ -14,7 +14,7 @@ import java.util.List;
     public class Cart{
         @Id
         @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "cart_seq_generator")
-        @SequenceGenerator(name = "cart_seq_generator", sequenceName = "cart_shop_seq", allocationSize = 1)
+        @SequenceGenerator(name = "cart_seq_generator", sequenceName = "cart_seq", allocationSize = 1)
         private Long id;
         private double totalPrice;
 

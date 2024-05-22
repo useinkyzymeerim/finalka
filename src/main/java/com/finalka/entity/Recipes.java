@@ -24,22 +24,21 @@ public class Recipes {
     private Long id;
     private String nameOfFood;
     private String description;
+    @Basic(fetch=FetchType.EAGER)
     @Lob
-    private String imageBase64;
+    private byte[] imageBase64;
     private String linkOfVideo;
     private Integer quantityOfProduct;
     private Integer cookingTime;
 
-    @OneToMany(mappedBy = "recipe")
+    @OneToMany(mappedBy = "recipe",fetch = FetchType.LAZY)
     private List<RecipesWithProducts> recipesWithProducts;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Menu menu;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
-
-
 
     private String createdBy;
     private Timestamp createdAt;

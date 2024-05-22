@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface RecipesRepo extends JpaRepository<Recipes,Long> {
@@ -24,5 +23,7 @@ public interface RecipesRepo extends JpaRepository<Recipes,Long> {
 
     List<Recipes> findAllByDeletedAtIsNull();
     Recipes findByDeletedAtIsNullAndId(Long id);
+    List<Recipes> findByRecipesWithProducts_Product_ProductNameIn(List<String> productNames);
+    List<Recipes> findByMenu_Id(Long menuId);
 }
 

@@ -25,6 +25,7 @@ import java.util.List;
         private String productName;
         private Double price;
         private Integer quantity;
+        @Enumerated(value = EnumType.STRING)
         private Units2 units2Enum;
         private Integer quantityInStock;
         private String type;

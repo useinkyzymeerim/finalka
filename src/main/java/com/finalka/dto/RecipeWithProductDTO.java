@@ -20,8 +20,7 @@ public class RecipeWithProductDTO {
     private Long id;
     private String nameOfFood;
     private String description;
-    @Lob
-    private String imageBase64;
+    private byte[] imageBase64;
     private String linkOfVideo;
     private Integer quantityOfProduct;
     private Integer cookingTime;

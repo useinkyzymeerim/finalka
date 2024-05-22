@@ -16,13 +16,15 @@ public class CartController {
     private final CartService cartService;
 
     @PostMapping("/create")
-    public ResponseEntity<CreateCartDto> save(@RequestBody CreateCartDto createCartDto){
+    public ResponseEntity<String> save(@RequestBody CreateCartDto createCartDto){
         try {
-            return new ResponseEntity<>(cartService.createCart(createCartDto), HttpStatus.CREATED);
+            cartService.createCart(createCartDto);
+            return new ResponseEntity<>("Корзина успешно создана", HttpStatus.CREATED);
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Не удалось создать корзину", HttpStatus.BAD_REQUEST);
         }
     }
+
     @PutMapping("/{cartId}/update-product-quantity")
     public ResponseEntity<CartDto> updateProductQuantityInCart(@PathVariable Long cartId,
                                                                @RequestBody UpdateProductQuantityDto updateProductQuantityDto) {
@@ -46,12 +48,16 @@ public class CartController {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
-
     @PostMapping("/{cartId}/addProduct/{productId}")
-    public ResponseEntity<Void> addProductToCart(@PathVariable Long cartId, @PathVariable  Long productId) {
-        cartService.addProductToCart(cartId, productId);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<String> addProductToCart(@PathVariable Long cartId, @PathVariable Long productId) {
+        try {
+            cartService.addProductToCart(cartId, productId);
+                return new ResponseEntity<>("Товар успешно добавлен в корзину", HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Не удалось добавить товар в корзину", HttpStatus.BAD_REQUEST);
+        }
     }
+
 
     @GetMapping("/{cartId}/products")
     public ResponseEntity<List<CreateProductOfShopDto>> getAllProductsInCart(@PathVariable Long cartId) {
@@ -60,8 +66,13 @@ public class CartController {
     }
 
     @DeleteMapping("/{cartId}/removeProduct/{productId}")
-    public ResponseEntity<Void> removeProductFromCart(@PathVariable Long cartId, @PathVariable Long productId) {
-        cartService.removeProductFromCart(cartId, productId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> removeProductFromCart(@PathVariable Long cartId, @PathVariable Long productId) {
+        try {
+            cartService.removeProductFromCart(cartId, productId);
+            return new ResponseEntity<>("Товар успешно удален из корзины", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Не удалось удалить товар из корзины", HttpStatus.BAD_REQUEST);
+        }
     }
+
 }
