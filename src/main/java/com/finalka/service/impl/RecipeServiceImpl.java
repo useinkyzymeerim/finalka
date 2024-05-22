@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class RecipeServiceImpl implements RecipesService {
@@ -32,6 +33,7 @@ public class RecipeServiceImpl implements RecipesService {
     public List<RecipeDetailsDTO> findRecipeDetails(Long recipeId) {
         return recipesRepo.findRecipeDetails(recipeId);
     }
+
     @Override
     public List<RecipeWithProductDTO> findRecipesByProducts(List<String> userProducts) {
             List<Recipes> recipes = recipesRepo.findByRecipesWithProducts_Product_ProductNameIn(userProducts);

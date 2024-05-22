@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+
 public class MenuServiceImpl implements MenuService {
     private final MenuRepo menuRepo;
     private final RecipesWithProductsRepo recipesWithProductsRepo;
@@ -121,6 +122,7 @@ public class MenuServiceImpl implements MenuService {
         log.info("КОНЕЦ: MenuServiceImpl - findAll()");
         return menuDTOS;
     }
+    @Transactional
     @Override
     public Map<Products, Integer> calculateRequiredProductsForMenu (Long id){
 
