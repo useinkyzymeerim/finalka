@@ -9,6 +9,7 @@ import com.finalka.entity.Menu;
 import com.finalka.entity.Products;
 import com.finalka.entity.Recipes;
 import com.finalka.entity.RecipesWithProducts;
+import com.finalka.enums.Units;
 import com.finalka.repo.MenuRepo;
 import com.finalka.repo.RecipesRepo;
 import com.finalka.repo.RecipesWithProductsRepo;
@@ -126,22 +127,29 @@ public class MenuServiceImpl implements MenuService {
 
     @Transactional
     @Override
-    public Map<Products, Integer> calculateRequiredProductsForMenu (Long id){
-
+    public Map<Products, Map.Entry<Integer, Units>> calculateRequiredProductsForMenu(Long id) {
         List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByRecipe_Menu_Id(id);
 
-        Map<Products, Integer> productQuantityMap = new HashMap<>();
+        Map<Products, Map.Entry<Integer, Units>> productQuantityMap = new HashMap<>();
 
         for (RecipesWithProducts recipesWithProducts : recipesWithProductsList) {
-            Products product = (Products) recipesWithProducts.getProduct();
+            Products product = recipesWithProducts.getProduct();
             int quantity = recipesWithProducts.getQuantityOfProduct();
+            Units unit = product.getUnitsEnum();
 
-            int totalQuantity = productQuantityMap.getOrDefault(product, 0) + quantity;
-            productQuantityMap.put(product, totalQuantity);
+            // Проверяем, если продукт уже есть в карте, добавляем количество
+            if (productQuantityMap.containsKey(product)) {
+                Map.Entry<Integer, Units> entry = productQuantityMap.get(product);
+                int totalQuantity = entry.getKey() + quantity;
+                productQuantityMap.put(product, new AbstractMap.SimpleEntry<>(totalQuantity, unit));
+            } else {
+                productQuantityMap.put(product, new AbstractMap.SimpleEntry<>(quantity, unit));
+            }
         }
 
         return productQuantityMap;
     }
+
 
     @Override
     public List<MenuWithRecipeDTO> getMenuWithRecipes(Long menuId) {

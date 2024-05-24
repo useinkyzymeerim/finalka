@@ -35,7 +35,7 @@ public class RecipeServiceImpl implements RecipesService {
             throw new RuntimeException("Recipe not found or deleted");
         }
 
-        List<RecipesWithProducts> recipesWithProducts = recipe.getRecipesWithProducts();
+        Set<RecipesWithProducts> recipesWithProducts = recipe.getRecipesWithProducts();
 
         List<ProductDetailsDto> productDetailsDtos = recipesWithProducts.stream().map(rwp -> {
             return ProductDetailsDto.builder()
@@ -59,7 +59,11 @@ public class RecipeServiceImpl implements RecipesService {
                 .map(String::toLowerCase)
                 .collect(Collectors.toList());
 
-        List<Recipes> recipes = recipesRepo.findByRecipesWithProducts_Product_ProductNameInIgnoreCase(lowerCaseProducts);
+        List<Recipes> recipes = new ArrayList<>();
+        for (String product : lowerCaseProducts) {
+            recipes.addAll(recipesRepo.findByProductNameContainingIgnoreCase(product));
+        }
+
         return mapToRecipeDTOList(recipes);
     }
 
@@ -88,7 +92,7 @@ public class RecipeServiceImpl implements RecipesService {
                 .build();
     }
 
-    private List<ProductDTO> mapToProductDTOList(List<RecipesWithProducts> recipesWithProducts) {
+    private List<ProductDTO> mapToProductDTOList(Set<RecipesWithProducts> recipesWithProducts) {
         return recipesWithProducts.stream()
                 .map(recipeProduct -> ProductDTO.builder()
                         .id(recipeProduct.getProduct().getId())
