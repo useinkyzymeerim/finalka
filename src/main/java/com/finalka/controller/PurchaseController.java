@@ -1,6 +1,8 @@
 package com.finalka.controller;
 
 import com.finalka.dto.PurchaseDTO;
+import com.finalka.dto.PurchaseDetailsDto;
+import com.finalka.entity.Purchase;
 import com.finalka.service.PurchaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,4 +29,14 @@ public class PurchaseController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PurchaseDetailsDto> getPurchaseWithProducts(@PathVariable Long id) {
+        PurchaseDetailsDto purchaseDetailsDto = purchaseService.getPurchaseWithProducts(id);
+
+        if (purchaseDetailsDto == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(purchaseDetailsDto);
+    }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 public class CartController {
     private final CartService cartService;
 
-    @PostMapping("/create")
+    @PostMapping("/")
     public ResponseEntity<String> save(@RequestBody CreateCartDto createCartDto){
         try {
             cartService.createCart(createCartDto);
@@ -26,10 +26,10 @@ public class CartController {
     }
 
     @PutMapping("/{cartId}/update-product-quantity")
-    public ResponseEntity<CartDto> updateProductQuantityInCart(@PathVariable Long cartId,
+    public ResponseEntity<CartDetailDto> updateProductQuantityInCart(@PathVariable Long cartId,
                                                                @RequestBody UpdateProductQuantityDto updateProductQuantityDto) {
         try {
-            CartDto updatedCart = cartService.updateCart(cartId, updateProductQuantityDto);
+            CartDetailDto updatedCart = cartService.updateCart(cartId, updateProductQuantityDto);
             if (updatedCart != null) {
                 return ResponseEntity.ok(updatedCart);
             } else {
@@ -40,8 +40,8 @@ public class CartController {
         }
     }
     @GetMapping("/{cartId}")
-    public ResponseEntity<CartDto> getCartById(@PathVariable Long cartId) {
-        CartDto cartDto = cartService.findCartById(cartId);
+    public ResponseEntity<CartDetailDto> getCartById(@PathVariable Long cartId) {
+        CartDetailDto cartDto = cartService.findCartById(cartId);
         if (cartDto != null) {
             return new ResponseEntity<>(cartDto, HttpStatus.OK);
         } else {
@@ -56,13 +56,6 @@ public class CartController {
         } catch (Exception e) {
             return new ResponseEntity<>("Не удалось добавить товар в корзину", HttpStatus.BAD_REQUEST);
         }
-    }
-
-
-    @GetMapping("/{cartId}/products")
-    public ResponseEntity<List<CreateProductOfShopDto>> getAllProductsInCart(@PathVariable Long cartId) {
-        List<CreateProductOfShopDto> productsInCart = cartService.getAllProductsInCart(cartId);
-        return ResponseEntity.ok(productsInCart);
     }
 
     @DeleteMapping("/{cartId}/removeProduct/{productId}")

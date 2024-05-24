@@ -24,6 +24,7 @@ public class Recipes {
     private Long id;
     private String nameOfFood;
     private String description;
+
     @Basic(fetch=FetchType.EAGER)
     @Lob
     private byte[] imageBase64;

@@ -17,11 +17,12 @@ public class Registration {
 
     private final UserServiceImpl service;
     @PostMapping()
-    public ResponseEntity<UserDto> save(@RequestBody UserDto userToSave) {
+    public ResponseEntity<String> save(@RequestBody UserDto userToSave) {
         try {
-            return new ResponseEntity<>(service.save(userToSave), HttpStatus.CREATED);
-        } catch (RuntimeException runtimeException) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            service.save(userToSave);
+            return new ResponseEntity<>("Регистрация пользователя прошла успешно.", HttpStatus.CREATED);
+        } catch (Exception e){
+            return new ResponseEntity<>("Не удалось зарегистрировать пользователя.", HttpStatus.BAD_REQUEST);
         }
     }
 }

@@ -17,7 +17,7 @@ import java.util.List;
 public class ProductOfShopController {
     private final ProductOfShopService productOfShopService;
 
-    @PostMapping("/create")
+    @PostMapping("/")
     public ResponseEntity<String> save(@RequestBody CreateProductOfShopDto createProductOfShopDto){
         try {
             productOfShopService.createProduct(createProductOfShopDto);
@@ -63,8 +63,8 @@ public class ProductOfShopController {
             return ResponseEntity.ok(filteredProducts);
         }
 
-    @GetMapping("/filterByAvailability")
-    public ResponseEntity<List<ProductOfShopDto>> filterProductsByAvailability(@RequestParam boolean inStock) {
+           @GetMapping("/filterByAvailability")
+        public ResponseEntity<List<ProductOfShopDto>> filterProductsByAvailability(@RequestParam boolean inStock) {
         List<ProductOfShopDto> filteredProducts = productOfShopService.filterProductsByAvailability(inStock);
         return ResponseEntity.ok(filteredProducts);
     }

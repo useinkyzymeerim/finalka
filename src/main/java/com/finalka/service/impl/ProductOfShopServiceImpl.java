@@ -3,13 +3,11 @@ package com.finalka.service.impl;
 import com.finalka.dto.CreateProductOfShopDto;
 import com.finalka.dto.ProductOfShopDto;
 import com.finalka.entity.ProductOfShop;
-import com.finalka.mapper.ProductMapper;
 import com.finalka.repo.ProductOfShopRepo;
 import com.finalka.service.ProductOfShopService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,7 +22,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     private final ModelMapper modelMapper;
 
     @Override
-    public CreateProductOfShopDto createProduct(CreateProductOfShopDto createProductOfShopDto) {
+    public void createProduct(CreateProductOfShopDto createProductOfShopDto) {
         ProductOfShop product = new ProductOfShop();
         product.setProductName(createProductOfShopDto.getProductName());
         product.setPrice(createProductOfShopDto.getPrice());
@@ -33,9 +31,11 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
         product.setType(createProductOfShopDto.getType());
         product.setQuantityInStock(createProductOfShopDto.getQuantityInStock());
 
+        product.updateInStock();
+
         ProductOfShop savedProduct = productOfShopRepo.save(product);
 
-        return CreateProductOfShopDto.builder()
+        CreateProductOfShopDto.builder()
                 .id(savedProduct.getId())
                 .productName(savedProduct.getProductName())
                 .price(savedProduct.getPrice())
@@ -45,6 +45,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
                 .quantityInStock(savedProduct.getQuantityInStock())
                 .build();
     }
+
     public CreateProductOfShopDto updateProduct(Long productId, CreateProductOfShopDto productDTO) {
         ProductOfShop existingProduct = productOfShopRepo.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
@@ -55,6 +56,8 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
         existingProduct.setUnits2Enum(productDTO.getUnits2Enum());
         existingProduct.setType(productDTO.getType());
         existingProduct.setQuantityInStock(productDTO.getQuantityInStock());
+
+        existingProduct.updateInStock();
 
         ProductOfShop updatedProduct = productOfShopRepo.save(existingProduct);
 
@@ -94,7 +97,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
 
     public void decreaseProductQuantityInStock(Long productId, int quantity) {
         ProductOfShop product = productOfShopRepo.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Продукт с id: " + productId + "не найден!"));
+                .orElseThrow(() -> new RuntimeException("Продукт с id: " + productId + " не найден!"));
 
         int currentQuantityInStock = product.getQuantityInStock();
         if (currentQuantityInStock < quantity) {
@@ -103,9 +106,12 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
 
         int newQuantityInStock = currentQuantityInStock - quantity;
         product.setQuantityInStock(newQuantityInStock);
+
+        // Update the inStock status
+        product.updateInStock();
+
         productOfShopRepo.save(product);
     }
-
 
     // Фильтрация продуктов по типу продукта (например, фрукты, овощи, мясо, рыба и т.д.)
     public List<ProductOfShopDto> filterProductsByType(String type) {
@@ -114,6 +120,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
                 .map(product -> modelMapper.map(product, ProductOfShopDto.class))
                 .collect(Collectors.toList());
     }
+
     // Фильтрация продуктов по наличию на складе
     public List<ProductOfShopDto> filterProductsByAvailability(boolean inStock) {
         List<ProductOfShop> filteredProducts = productOfShopRepo.findByInStock(inStock);

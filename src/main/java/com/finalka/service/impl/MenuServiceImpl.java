@@ -57,6 +57,7 @@ public class MenuServiceImpl implements MenuService {
             throw new RuntimeException("Failed to save menu", e);
         }
     }
+
     @Override
     public String delete(Long id) {
         log.info("СТАРТ: MenuServiceImpl - delete(). Удалить запись с id {}", id);
@@ -96,6 +97,7 @@ public class MenuServiceImpl implements MenuService {
                 .build();
 
     }
+
     @Override
     public List<MenuDTO> findAll() {
         log.info("СТАРТ: MenuServiceImpl - findAll()");
@@ -121,6 +123,8 @@ public class MenuServiceImpl implements MenuService {
         log.info("КОНЕЦ: MenuServiceImpl - findAll()");
         return menuDTOS;
     }
+
+    @Transactional
     @Override
     public Map<Products, Integer> calculateRequiredProductsForMenu (Long id){
 
@@ -138,6 +142,7 @@ public class MenuServiceImpl implements MenuService {
 
         return productQuantityMap;
     }
+
     @Override
     public List<MenuWithRecipeDTO> getMenuWithRecipes(Long menuId) {
         List<MenuWithRecipeDTO> menuWithRecipesDTOList = new ArrayList<>();
@@ -161,11 +166,13 @@ public class MenuServiceImpl implements MenuService {
 
         return menuWithRecipesDTOList;
     }
+
     @Transactional
     public List<RecipesDto> getRecipesByMenuId(Long menuId) {
-        Menu menu = menuRepo.findById(menuId)
-                .orElseThrow(() -> new RuntimeException("Menu not found"));
-
+        Menu menu = menuRepo.findByDeletedAtIsNullAndId(menuId);
+        if (menu == null) {
+            throw new RuntimeException("Меню не найдено или удалено");
+        }
         return menu.getRecipes().stream()
                 .map(recipe -> RecipesDto.builder()
                         .nameOfFood(recipe.getNameOfFood())
@@ -173,6 +180,7 @@ public class MenuServiceImpl implements MenuService {
                         .build())
                 .collect(Collectors.toList());
     }
+
     @Override
     public MenuDTO update(MenuDTO menuDTO) {
         log.info("СТАРТ: MenuServiceImpl - update({})", menuDTO);

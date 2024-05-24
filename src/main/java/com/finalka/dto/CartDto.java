@@ -19,7 +19,6 @@ import java.util.List;
     @NoArgsConstructor
     @Builder
     public class CartDto {
-        private Long id;
         private List<CreateProductOfShopDto> productOfShops;
         private User user;
         private double totalPrice;

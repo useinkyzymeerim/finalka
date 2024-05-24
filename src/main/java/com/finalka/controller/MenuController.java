@@ -63,15 +63,6 @@ public class MenuController {
                     description = "Меню с рецептами не найдено")
     })
 
-    @GetMapping("/menu/{menuId}/recipes")
-    public ResponseEntity<List<MenuWithRecipeDTO>> getMenuWithRecipes(@PathVariable Long menuId) {
-        List<MenuWithRecipeDTO> menuWithRecipes = menuService.getMenuWithRecipes(menuId);
-        if (menuWithRecipes.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } else {
-            return new ResponseEntity<>(menuWithRecipes, HttpStatus.OK);
-        }
-    }
     @GetMapping("/{menuId}/recipes")
     public ResponseEntity<List<RecipesDto>> getRecipesByMenuId(@PathVariable Long menuId) {
         List<RecipesDto> recipes = menuService.getRecipesByMenuId(menuId);
@@ -116,14 +107,14 @@ public class MenuController {
     })
     @Operation(summary = "Роут для создание меню")
     @PostMapping
-    public ResponseEntity<CreateMenuDto> save(@RequestBody CreateMenuDto menuDTO){
+    public ResponseEntity<String> save(@RequestBody CreateMenuDto menuDTO){
         try {
-            return new ResponseEntity<>(menuService.save(menuDTO), HttpStatus.CREATED);
+            menuService.save(menuDTO);
+            return new ResponseEntity<>("Меню успешно создана", HttpStatus.CREATED);
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Не удалось создать меню", HttpStatus.BAD_REQUEST);
         }
     }
-
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
