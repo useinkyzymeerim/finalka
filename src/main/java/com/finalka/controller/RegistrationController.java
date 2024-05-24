@@ -13,16 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/registration")
-public class Registration {
+public class RegistrationController {
 
     private final UserServiceImpl service;
     @PostMapping()
     public ResponseEntity<String> save(@RequestBody UserDto userToSave) {
         try {
             service.save(userToSave);
-            return new ResponseEntity<>("Registration successful", HttpStatus.CREATED);
-        } catch (RuntimeException runtimeException) {
-            return new ResponseEntity<>("Registration failed", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Регистрация пользователя прошла успешно.", HttpStatus.CREATED);
+        } catch (Exception e){
+            return new ResponseEntity<>("Не удалось зарегистрировать пользователя.", HttpStatus.BAD_REQUEST);
         }
     }
 

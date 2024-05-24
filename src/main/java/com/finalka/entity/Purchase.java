@@ -30,4 +30,12 @@ public class Purchase {
     @JoinColumn(name = "cart_id")
     private Cart cart;
 
+    @ManyToMany
+    @JoinTable(
+            name = "purchase_products",
+            joinColumns = @JoinColumn(name = "purchase_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private List<ProductOfShop> purchasedProducts;
+
 }

@@ -37,9 +37,13 @@ public class ChefController {
     })
     @Operation(summary = "Роут для создание рецепта")
     @PostMapping
-    public ResponseEntity<RecipeWithProductDTO> createRecipeWithProducts(@RequestBody RecipeWithProductDTO recipeDto) {
-        RecipeWithProductDTO createdRecipe = recipeService.createRecipeWithProducts(recipeDto);
-        return ResponseEntity.ok(createdRecipe);
+    public ResponseEntity<String> createRecipeWithProducts(@RequestBody RecipeWithProductDTO recipeDto) {
+        try {
+            recipeService.createRecipeWithProducts(recipeDto);
+            return new ResponseEntity<>("Рецепт успешно создан", HttpStatus.CREATED);
+        } catch (Exception e){
+            return new ResponseEntity<>("Не удалось создать рецепт", HttpStatus.BAD_REQUEST);
+        }
     }
     @ApiResponses(value = {
             @ApiResponse(

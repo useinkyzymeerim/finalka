@@ -42,7 +42,6 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -55,25 +54,15 @@ public class UserController {
 
     })
     @Operation(summary = "Этот роут возвращает Рецепты с продуктами по ID")
-    @GetMapping("/recipeDetails/{recipeId}")
-    public ResponseEntity<List<RecipeDetailsDTO>> getRecipeDetails(@PathVariable Long recipeId) {
-        List<RecipeDetailsDTO> recipeDetails = recipeService.findRecipeDetails(recipeId);
-        return ResponseEntity.ok(recipeDetails);
+    @GetMapping("/{recipeId}/products")
+    public ResponseEntity<RecipeDetailsDTO> getRecipeDetails(@PathVariable Long recipeId) {
+        try {
+            RecipeDetailsDTO recipeDetails = recipeService.findRecipeDetails(recipeId);
+            return new ResponseEntity<>(recipeDetails, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
     }
-
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "записи получены успешно",
-                    content = {@Content(mediaType = "application/json")})
-    })
-    @Operation(summary = "Этот роут возвращает Рецепты с названием")
-    @GetMapping("/recipes-by-name")
-    public ResponseEntity<List<RecipesDto>> getRecipesByNameIgnoreCase(@RequestParam String recipeName) {
-        List<RecipesDto> recipeDTOList = recipeService.findByRecipeNameIgnoreCase(recipeName);
-        return ResponseEntity.ok(recipeDTOList);
-    }
-
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -87,14 +76,13 @@ public class UserController {
     @Operation(summary = "Роут для поиска рецепт по id")
     @GetMapping("/{id}")
 
-    public ResponseEntity<RecipesDto> findById(@PathVariable Long id) {
+    public ResponseEntity<RecipesDto> findById(@PathVariable Long id){
         try {
             return new ResponseEntity<>(recipeService.findById(id), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException) {
+        } catch (NullPointerException nullPointerException){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
     @PostMapping("/search")
     public ResponseEntity<List<RecipeWithProductDTO>> searchRecipesByProducts(@RequestBody List<String> userProducts) {
         List<RecipeWithProductDTO> recipes = recipeService.findRecipesByProducts(userProducts);
