@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class RecipeServiceImpl implements RecipesService {
@@ -28,63 +27,83 @@ public class RecipeServiceImpl implements RecipesService {
     private final UserRepo userRepo;
     private final MenuRepo menuRepo;
 
+    @Transactional
     @Override
+    public RecipeDetailsDTO findRecipeDetails(Long recipeId) {
+        Recipes recipe = recipesRepo.findByDeletedAtIsNullAndId(recipeId);
+        if (recipe == null) {
+            throw new RuntimeException("Recipe not found or deleted");
+        }
 
-    public List<RecipeDetailsDTO> findRecipeDetails(Long recipeId) {
-        return recipesRepo.findRecipeDetails(recipeId);
+        List<RecipesWithProducts> recipesWithProducts = recipe.getRecipesWithProducts();
+
+        List<ProductDetailsDto> productDetailsDtos = recipesWithProducts.stream().map(rwp -> {
+            return ProductDetailsDto.builder()
+                    .productName(rwp.getProduct().getProductName())
+                    .quantity(rwp.getQuantityOfProduct())
+                    .unitsEnum(rwp.getUnitsEnum())
+                    .build();
+        }).collect(Collectors.toList());
+
+        return RecipeDetailsDTO.builder()
+                .recipeName(recipe.getNameOfFood())
+                .productDetailsDtos(productDetailsDtos)
+                .quantityOfProduct(recipe.getQuantityOfProduct())
+                .build();
     }
 
+    @Transactional
     @Override
     public List<RecipeWithProductDTO> findRecipesByProducts(List<String> userProducts) {
-            List<Recipes> recipes = recipesRepo.findByRecipesWithProducts_Product_ProductNameIn(userProducts);
-            return mapToRecipeDTOList(recipes);
-        }
-        private List<RecipeWithProductDTO> mapToRecipeDTOList(List<Recipes> recipes) {
-            return recipes.stream()
-                    .map(this::mapToRecipeDTO)
-                    .collect(Collectors.toList());
-        }
+        List<String> lowerCaseProducts = userProducts.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
 
-        private RecipeWithProductDTO mapToRecipeDTO(Recipes recipe) {
-            return RecipeWithProductDTO.builder()
-                    .id(recipe.getId())
-                    .nameOfFood(recipe.getNameOfFood())
-                    .description(recipe.getDescription())
-                    .linkOfVideo(recipe.getLinkOfVideo())
-                    .quantityOfProduct(recipe.getQuantityOfProduct())
-                    .cookingTime(recipe.getCookingTime())
-                    .products(mapToProductDTOList(recipe.getRecipesWithProducts()))
-                    .createdBy(recipe.getCreatedBy())
-                    .createdAt(recipe.getCreatedAt())
-                    .lastUpdatedBy(recipe.getLastUpdatedBy())
-                    .lastUpdatedAt(recipe.getLastUpdatedAt())
-                    .deletedBy(recipe.getDeletedBy())
-                    .deletedAt(recipe.getDeletedAt())
-                    .build();
-        }
+        List<Recipes> recipes = recipesRepo.findByRecipesWithProducts_Product_ProductNameInIgnoreCase(lowerCaseProducts);
+        return mapToRecipeDTOList(recipes);
+    }
 
-        private List<ProductDTO> mapToProductDTOList(List<RecipesWithProducts> recipesWithProducts) {
-            return recipesWithProducts.stream()
-                    .map(recipeProduct -> ProductDTO.builder()
-                            .id(recipeProduct.getProduct().getId())
-                            .productName(recipeProduct.getProduct().getProductName())
-                            .build())
-                    .collect(Collectors.toList());
-        }
-        private RecipeWithProductDTO convertToDTO(RecipesWithProducts recipesWithProducts) {
-            RecipeWithProductDTO recipeDTO = new RecipeWithProductDTO();
+    private List<RecipeWithProductDTO> mapToRecipeDTOList(List<Recipes> recipes) {
+        return recipes.stream()
+                .map(this::mapToRecipeDTO)
+                .collect(Collectors.toList());
+    }
+
+    private RecipeWithProductDTO mapToRecipeDTO(Recipes recipe) {
+        return RecipeWithProductDTO.builder()
+                .id(recipe.getId())
+                .nameOfFood(recipe.getNameOfFood())
+                .description(recipe.getDescription())
+                .imageBase64(recipe.getImageBase64())
+                .linkOfVideo(recipe.getLinkOfVideo())
+                .quantityOfProduct(recipe.getQuantityOfProduct())
+                .cookingTime(recipe.getCookingTime())
+                .products(mapToProductDTOList(recipe.getRecipesWithProducts()))
+                .createdBy(recipe.getCreatedBy())
+                .createdAt(recipe.getCreatedAt())
+                .lastUpdatedBy(recipe.getLastUpdatedBy())
+                .lastUpdatedAt(recipe.getLastUpdatedAt())
+                .deletedBy(recipe.getDeletedBy())
+                .deletedAt(recipe.getDeletedAt())
+                .build();
+    }
+
+    private List<ProductDTO> mapToProductDTOList(List<RecipesWithProducts> recipesWithProducts) {
+        return recipesWithProducts.stream()
+                .map(recipeProduct -> ProductDTO.builder()
+                        .id(recipeProduct.getProduct().getId())
+                        .productName(recipeProduct.getProduct().getProductName())
+                        .build())
+                .collect(Collectors.toList());
+    }
+    private RecipeWithProductDTO convertToDTO(RecipesWithProducts recipesWithProducts) {
+        RecipeWithProductDTO recipeDTO = new RecipeWithProductDTO();
         recipeDTO.setId(recipesWithProducts.getRecipe().getId());
         recipeDTO.setNameOfFood(recipesWithProducts.getRecipe().getNameOfFood());
 
         return recipeDTO;
     }
-    @Override
-    public List<RecipesDto> findByRecipeNameIgnoreCase(String recipeName) {
-        List<Recipes> recipes = recipesRepo.findByNameOfFoodIgnoreCase(recipeName);
-        return recipes.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
+
     private RecipesDto convertToDTO(Recipes recipe) {
         RecipesDto recipeDTO = new RecipesDto();
         recipeDTO.setId(recipe.getId());
@@ -94,7 +113,7 @@ public class RecipeServiceImpl implements RecipesService {
     }
 
     @Override
-    public RecipeWithProductDTO createRecipeWithProducts(RecipeWithProductDTO recipeDTO) {
+    public void createRecipeWithProducts(RecipeWithProductDTO recipeDTO) {
         try {
             log.info("START: RecipeServiceImpl - createRecipeWithProducts() {}", recipeDTO);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -154,12 +173,12 @@ public class RecipeServiceImpl implements RecipesService {
                 }
             }
             log.info("END: RecipeServiceImpl - createRecipeWithProducts {}", recipeDTO);
-            return recipeDTO;
         } catch (Exception e) {
             log.error("Не удалось создать рецепт с продуктом", e);
             throw new RuntimeException("Не удалось создать рецепт с продуктом", e);
         }
     }
+
     private void addProductToRecipe(Long productId, Long recipeId, Integer quantity, Units unitsEnum) {
         try {
             Optional<Recipes> optionalRecipe = recipesRepo.findById(recipeId);
@@ -191,6 +210,7 @@ public class RecipeServiceImpl implements RecipesService {
         }
     }
 
+    @Transactional
     @Override
     public String delete(Long id) {
         log.info("СТАРТ: RecipeServiceImpl - delete(). Удалить запись с id {}", id);
@@ -199,6 +219,7 @@ public class RecipeServiceImpl implements RecipesService {
             log.error("Рецепт с id " + id + " не найдена!");
             throw new NullPointerException("Рецепт с id " + id + " не найдена!");
         }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
@@ -208,6 +229,7 @@ public class RecipeServiceImpl implements RecipesService {
         log.info("КОНЕЦ: RecipeServiceImpl - delete(). Удаленна запись с id {}", id);
         return "Рецепт с id " + id + " была удалена!";
     }
+
     @Override
     public RecipesDto findById(Long id) {
         log.info("СТАРТ: RecipeServiceImpl - findById({})", id);
@@ -230,11 +252,13 @@ public class RecipeServiceImpl implements RecipesService {
                 .build();
 
     }
+
     @Transactional
     @Override
     public List<RecipesDto> findAll() {
         log.info("СТАРТ: RecipeServiceImpl - findAll()");
         List<Recipes> recipesList = recipesRepo.findAllByDeletedAtIsNull();
+        //можно убрать
         if (recipesList.isEmpty()) {
             log.error("Актуальных рецептов нет!");
             throw new NullPointerException("Актуальных рецептов нет!");
@@ -257,6 +281,7 @@ public class RecipeServiceImpl implements RecipesService {
         log.info("КОНЕЦ: RecipeServiceImpl - findAll()");
         return recipesDtos;
     }
+
     @Override
     public RecipesDto update(RecipesDto recipesDto) {
         log.info("СТАРТ: RecipeServiceImpl - update({})", recipesDto);
@@ -288,10 +313,5 @@ public class RecipeServiceImpl implements RecipesService {
         log.info("КОНЕЦ: RecipeServiceImpl - update(). Обноленная запись - {}", recipesDto);
         return recipesDto;
     }
-
-
-
-
-
 }
 

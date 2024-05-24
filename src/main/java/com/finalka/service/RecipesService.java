@@ -11,16 +11,12 @@ import com.finalka.entity.Recipes;
 import java.util.List;
 
 public interface RecipesService {
-    List<RecipeDetailsDTO> findRecipeDetails(Long recipeId);
-
+    RecipeDetailsDTO findRecipeDetails(Long recipeId);
     List<RecipeWithProductDTO> findRecipesByProducts(List<String> userProducts);
-
-    List<RecipesDto> findByRecipeNameIgnoreCase(String recipeName);
-    RecipeWithProductDTO createRecipeWithProducts(RecipeWithProductDTO recipeDTO);
+    void createRecipeWithProducts(RecipeWithProductDTO recipeDTO);
     String delete(Long id);
     RecipesDto findById(Long id);
     List<RecipesDto> findAll () throws Exception;
     RecipesDto update(RecipesDto recipesDto);
-
 }
 

@@ -9,10 +9,10 @@
         <relativePath/>
     </parent>
     <groupId>com.expert</groupId>
-    <artifactId>crm-backend</artifactId>
+    <artifactId>WeeklyMenu</artifactId>
     <version>1.0</version>
-    <name>crm-backend</name>
-    <description>crm-backend</description>
+    <name>WeeklyMenu</name>
+    <description>WeeklyMenu</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
