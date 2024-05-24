@@ -3,6 +3,7 @@ package com.finalka.controller;
 
 import com.finalka.dto.*;
 import com.finalka.entity.Products;
+import com.finalka.enums.Units;
 import com.finalka.service.MenuService;
 import com.finalka.service.RecipesService;
 import com.finalka.service.ReviewService;
@@ -92,12 +93,12 @@ public class UserController {
     @GetMapping("/{menuId}/requiredProducts")
     public ResponseEntity<?> getRequiredProductsForMenu(@PathVariable Long menuId) {
         try {
-            Map<Products, Integer> productQuantityMap = menuService.calculateRequiredProductsForMenu(menuId);
+            Map<Products, Map.Entry<Integer, Units>> productQuantityMap = menuService.calculateRequiredProductsForMenu(menuId);
 
 
             Map<String, Integer> productQuantityStringMap = new HashMap<>();
-            for (Map.Entry<Products, Integer> entry : productQuantityMap.entrySet()) {
-                productQuantityStringMap.put(entry.getKey().getProductName(), entry.getValue());
+            for (Map.Entry<Products, Map.Entry<Integer, Units>> entry : productQuantityMap.entrySet()) {
+                productQuantityStringMap.put(entry.getKey().getProductName(), entry.getValue().getKey());
             }
 
             return new ResponseEntity<>(productQuantityStringMap, HttpStatus.OK);

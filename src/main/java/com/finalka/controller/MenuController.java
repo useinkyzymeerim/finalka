@@ -5,6 +5,7 @@ import com.finalka.dto.MenuDTO;
 import com.finalka.dto.MenuWithRecipeDTO;
 import com.finalka.dto.RecipesDto;
 import com.finalka.entity.Products;
+import com.finalka.enums.Units;
 import com.finalka.service.MenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,18 +81,23 @@ public class MenuController {
                     responseCode = "404",
                     description = "Не найдено")
     })
+
     @GetMapping("/{menuId}/requiredProducts")
     public ResponseEntity<?> getRequiredProductsForMenu(@PathVariable Long menuId) {
         try {
-            Map<Products, Integer> productQuantityMap = menuService.calculateRequiredProductsForMenu(menuId);
+            Map<Products, Map.Entry<Integer, Units>> productQuantityMap = menuService.calculateRequiredProductsForMenu(menuId);
 
-
-            Map<String, Integer> productQuantityStringMap = new HashMap<>();
-            for (Map.Entry<Products, Integer> entry : productQuantityMap.entrySet()) {
-                productQuantityStringMap.put(entry.getKey().getProductName(), entry.getValue());
+            // Преобразование данных в удобный для возврата формат
+            List<Map<String, Object>> productQuantityList = new ArrayList<>();
+            for (Map.Entry<Products, Map.Entry<Integer, Units>> entry : productQuantityMap.entrySet()) {
+                Map<String, Object> productInfo = new HashMap<>();
+                productInfo.put("productName", entry.getKey().getProductName());
+                productInfo.put("quantity", entry.getValue().getKey());
+                productInfo.put("unit", entry.getValue().getValue().toString());
+                productQuantityList.add(productInfo);
             }
 
-            return new ResponseEntity<>(productQuantityStringMap, HttpStatus.OK);
+            return new ResponseEntity<>(productQuantityList, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>("Failed to calculate required products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

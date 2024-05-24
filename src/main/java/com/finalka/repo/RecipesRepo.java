@@ -2,6 +2,7 @@ package com.finalka.repo;
 
 import com.finalka.dto.RecipeDetailsDTO;
 import com.finalka.entity.Products;
+
 import com.finalka.entity.Recipes;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,6 +23,7 @@ public interface RecipesRepo extends JpaRepository<Recipes,Long> {
     List<RecipeDetailsDTO> findRecipeDetails(@Param("recipeId") Long recipeId);
     List<Recipes> findAllByDeletedAtIsNull();
     Recipes findByDeletedAtIsNullAndId(Long id);
-    List<Recipes> findByRecipesWithProducts_Product_ProductNameInIgnoreCase(@Param("productNames") List<String> productNames);
+    @Query("SELECT r FROM Recipes r JOIN r.recipesWithProducts rp JOIN rp.product p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :productName, '%'))")
+    List<Recipes> findByProductNameContainingIgnoreCase(@Param("productName") String productName);
 }
 
