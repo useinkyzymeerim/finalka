@@ -1,13 +1,11 @@
 package com.finalka.dto;
 
-import com.finalka.entity.RecipesWithProducts;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -16,8 +14,7 @@ import java.util.List;
 public class RecipesDto {
     private Long Id;
     private String nameOfFood;
-
-    private List<ProductDTO> products;
+    private byte[] imageBase64;
 
     private String createdBy;
     private Timestamp createdAt;

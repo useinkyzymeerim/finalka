@@ -31,62 +31,19 @@ public class CartServiceImpl implements CartService {
     private final UserService userService;
     private final ProductOfShopRepo productOfShopRepo;
 
-    // Обновленный метод сервиса для создания корзины
     public CreateCartDto createCart(CreateCartDto createCartDto) {
-        // Получение пользователя по его идентификатору из базы данных
         UserDto userDtoOfShop = userService.getById(createCartDto.getUserId());
         User user = modelMapper.map(userDtoOfShop, User.class);
 
-        // Создание пустой корзины для пользователя
         Cart cart = new Cart();
-        cart.setUser(user); // Установка пользователя для корзины
+        cart.setUser(user);
 
-        // Сохранение корзины в базу данных
         Cart savedCart = cartRepo.save(cart);
 
-        // Возвращение данных о созданной корзине
         return CreateCartDto.builder()
                 .id(savedCart.getId())
                 .userId(savedCart.getUser().getId())
                 .build();
-    }
-    @Override
-    public void addProductToCart(Long cartId, Long productId) {
-        // Получаем корзину по её ID
-        Cart cart = cartRepo.findById(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Корзина не найдена"));
-
-        // Получаем продукт по его ID
-        ProductOfShop product = productOfShopRepo.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
-
-        // Проверяем, есть ли уже такой продукт в корзине
-        boolean productExistsInCart = cart.getProductOfShops().stream()
-                .anyMatch(p -> p.getId().equals(productId));
-
-        // Если продукт уже есть в корзине, увеличиваем его количество
-        if (productExistsInCart) {
-            ProductOfShop existingProduct = cart.getProductOfShops().stream()
-                    .filter(p -> p.getId().equals(productId))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Продукт не найден в корзине"));
-            existingProduct.setQuantity(existingProduct.getQuantity() + 1);
-        } else {
-            // Если продукта нет в корзине, добавляем его
-            cart.getProductOfShops().add(product);
-        }
-
-        // Пересчитываем общую стоимость корзины
-        recalculateTotalPrice(cart);
-
-        // Сохраняем изменения в корзине
-        cartRepo.save(cart);
-    }
-    private void recalculateTotalPrice(Cart cart) {
-        double totalPrice = cart.getProductOfShops().stream()
-                .mapToDouble(p -> p.getPrice() * p.getQuantity())
-                .sum();
-        cart.setTotalPrice(totalPrice);
     }
     public List<CreateProductOfShopDto> getAllProductsInCart(Long cartId) {
         Cart cart = cartRepo.findById(cartId)
@@ -99,6 +56,31 @@ public class CartServiceImpl implements CartService {
 
         return productDTOs;
     }
+    @Override
+    public void addProductToCart(Long cartId, Long productId) {
+        Cart cart = cartRepo.findById(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Корзина не найдена"));
+
+        ProductOfShop product = productOfShopRepo.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+
+        boolean productExistsInCart = cart.getProductOfShops().stream()
+                .anyMatch(p -> p.getId().equals(productId));
+
+        if (productExistsInCart) {
+            ProductOfShop existingProduct = cart.getProductOfShops().stream()
+                    .filter(p -> p.getId().equals(productId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Продукт не найден в корзине"));
+            existingProduct.setQuantity(existingProduct.getQuantity() + 1);
+        } else {
+            cart.getProductOfShops().add(product);
+        }
+
+        recalculateTotalPrice(cart);
+        cartRepo.save(cart);
+    }
+
     public void removeProductFromCart(Long cartId, Long productId) {
         Cart cart = cartRepo.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Корзина не найдена"));
@@ -111,43 +93,36 @@ public class CartServiceImpl implements CartService {
                 .filter(product -> !product.getId().equals(productId))
                 .collect(Collectors.toList()));
 
-        recalculateTotalPriceAfterRemove(cart);
+        recalculateTotalPrice(cart);
         cartRepo.save(cart);
     }
-    private void recalculateTotalPriceAfterRemove(Cart cart) {
+    private void recalculateTotalPrice(Cart cart) {
         double totalPrice = cart.getProductOfShops().stream()
                 .mapToDouble(product -> product.getPrice() * product.getQuantity())
                 .sum();
         cart.setTotalPrice(totalPrice);
     }
     public CartDto updateCart(Long cartId, UpdateProductQuantityDto updateProductQuantityDto) {
-        // Проверяем существование корзины
         Cart cart = cartRepo.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Корзина не найдена"));
 
-        // Находим продукт по его идентификатору в корзине
         ProductOfShop productToUpdate = cart.getProductOfShops().stream()
                 .filter(product -> product.getId().equals(updateProductQuantityDto.getProductId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Продукт не найден в корзине"));
 
-        // Обновляем количество продукта
-        int oldQuantity = productToUpdate.getQuantity(); // Старое количество продукта
-        int newQuantity = updateProductQuantityDto.getQuantity(); // Новое количество продукта
+        int oldQuantity = productToUpdate.getQuantity();
+        int newQuantity = updateProductQuantityDto.getQuantity();
         productToUpdate.setQuantity(newQuantity);
 
-        // Пересчитываем общую сумму продуктов в корзине
         double totalPrice = cart.getProductOfShops().stream()
                 .mapToDouble(p -> p.getPrice() * p.getQuantity())
                 .sum();
 
-        // Устанавливаем новую общую сумму продуктов
         cart.setTotalPrice(totalPrice);
 
-        // Сохраняем обновленную корзину в базе данных
         Cart updatedCart = cartRepo.save(cart);
 
-        // Конвертируем и возвращаем обновленную корзину в виде DTO
         return convertToDto(updatedCart);
     }
     public CartDto findCartById(Long cartId) {

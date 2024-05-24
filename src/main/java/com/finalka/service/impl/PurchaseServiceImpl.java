@@ -48,20 +48,16 @@ public class PurchaseServiceImpl implements PurchaseService {
                 }
             }
 
-            // Создаем новую запись о покупке
             Purchase purchase = new Purchase();
             purchase.setUser(user);
             purchase.setCart(cart);
             purchase.setPurchaseDate(new Date());
 
-            // Вычисляем общую стоимость покупки
             double totalPrice = cart.getTotalPrice();
             purchase.setTotalPrice(totalPrice);
 
-            // Сохраняем запись о покупке в базе данных
             purchase = purchaseRepository.save(purchase);
 
-            // Уменьшаем количество товара в складе и обновляем флаги приобретения
             for (ProductOfShop purchasedProduct : cart.getProductOfShops()) {
                 productOfShopService.decreaseProductQuantityInStock(purchasedProduct.getId(), purchasedProduct.getQuantity());
                 purchasedProduct.setPurchased(true);
@@ -69,7 +65,6 @@ public class PurchaseServiceImpl implements PurchaseService {
                 purchasedProduct.setPurchaseDate(new Date());
             }
 
-            // Очищаем корзину после покупки
             cart.getProductOfShops().clear();
             cart.setTotalPrice(0.0);
             cartRepository.save(cart);

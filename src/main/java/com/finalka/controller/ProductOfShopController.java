@@ -18,11 +18,12 @@ public class ProductOfShopController {
     private final ProductOfShopService productOfShopService;
 
     @PostMapping("/create")
-    public ResponseEntity<CreateProductOfShopDto> save(@RequestBody CreateProductOfShopDto createProductOfShopDto){
+    public ResponseEntity<String> save(@RequestBody CreateProductOfShopDto createProductOfShopDto){
         try {
-            return new ResponseEntity<>(productOfShopService.createProduct(createProductOfShopDto), HttpStatus.CREATED);
+            productOfShopService.createProduct(createProductOfShopDto);
+            return new ResponseEntity<>("Продукт успешно создана", HttpStatus.CREATED);
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Не удалось создать продукт", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -33,10 +34,15 @@ public class ProductOfShopController {
     }
 
     @DeleteMapping("/delete/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
-        productOfShopService.deleteProduct(productId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> deleteProduct(@PathVariable Long productId) {
+        try {
+            productOfShopService.deleteProduct(productId);
+            return new ResponseEntity<>("Товар успешно удален", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Не удалось удалить товар", HttpStatus.BAD_REQUEST);
+        }
     }
+
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductOfShopDto> getProduct(@PathVariable Long productId) {

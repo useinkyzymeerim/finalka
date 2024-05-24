@@ -6,6 +6,7 @@ import com.finalka.entity.*;
 import com.finalka.enums.Units;
 import com.finalka.repo.*;
 import com.finalka.service.RecipesService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -13,13 +14,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class RecipeServiceImpl implements RecipesService {
@@ -29,24 +28,51 @@ public class RecipeServiceImpl implements RecipesService {
     private final UserRepo userRepo;
     private final MenuRepo menuRepo;
 
-
     @Override
+
     public List<RecipeDetailsDTO> findRecipeDetails(Long recipeId) {
         return recipesRepo.findRecipeDetails(recipeId);
     }
+
     @Override
-    public List<RecipesDto> findByProduct(String productName) {
-        List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByProduct_ProductName(productName);
+    public List<RecipeWithProductDTO> findRecipesByProducts(List<String> userProducts) {
+            List<Recipes> recipes = recipesRepo.findByRecipesWithProducts_Product_ProductNameIn(userProducts);
+            return mapToRecipeDTOList(recipes);
+        }
+        private List<RecipeWithProductDTO> mapToRecipeDTOList(List<Recipes> recipes) {
+            return recipes.stream()
+                    .map(this::mapToRecipeDTO)
+                    .collect(Collectors.toList());
+        }
 
+        private RecipeWithProductDTO mapToRecipeDTO(Recipes recipe) {
+            return RecipeWithProductDTO.builder()
+                    .id(recipe.getId())
+                    .nameOfFood(recipe.getNameOfFood())
+                    .description(recipe.getDescription())
+                    .linkOfVideo(recipe.getLinkOfVideo())
+                    .quantityOfProduct(recipe.getQuantityOfProduct())
+                    .cookingTime(recipe.getCookingTime())
+                    .products(mapToProductDTOList(recipe.getRecipesWithProducts()))
+                    .createdBy(recipe.getCreatedBy())
+                    .createdAt(recipe.getCreatedAt())
+                    .lastUpdatedBy(recipe.getLastUpdatedBy())
+                    .lastUpdatedAt(recipe.getLastUpdatedAt())
+                    .deletedBy(recipe.getDeletedBy())
+                    .deletedAt(recipe.getDeletedAt())
+                    .build();
+        }
 
-        List<RecipesDto> recipesDTOList = recipesWithProductsList.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-
-        return recipesDTOList;
-    }
-    private RecipesDto convertToDTO(RecipesWithProducts recipesWithProducts) {
-        RecipesDto recipeDTO = new RecipesDto();
+        private List<ProductDTO> mapToProductDTOList(List<RecipesWithProducts> recipesWithProducts) {
+            return recipesWithProducts.stream()
+                    .map(recipeProduct -> ProductDTO.builder()
+                            .id(recipeProduct.getProduct().getId())
+                            .productName(recipeProduct.getProduct().getProductName())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+        private RecipeWithProductDTO convertToDTO(RecipesWithProducts recipesWithProducts) {
+            RecipeWithProductDTO recipeDTO = new RecipeWithProductDTO();
         recipeDTO.setId(recipesWithProducts.getRecipe().getId());
         recipeDTO.setNameOfFood(recipesWithProducts.getRecipe().getNameOfFood());
 
@@ -145,7 +171,7 @@ public class RecipeServiceImpl implements RecipesService {
                 if (optionalProduct.isPresent()) {
                     Products product = optionalProduct.get();
 
-                    // Создать связь между продуктом и рецептом в таблице Recipe_Product
+
                     RecipesWithProducts recipeProduct = new RecipesWithProducts();
                     recipeProduct.setRecipe(recipe);
                     recipeProduct.setProduct(product);
@@ -204,6 +230,7 @@ public class RecipeServiceImpl implements RecipesService {
                 .build();
 
     }
+    @Transactional
     @Override
     public List<RecipesDto> findAll() {
         log.info("СТАРТ: RecipeServiceImpl - findAll()");
@@ -217,6 +244,7 @@ public class RecipeServiceImpl implements RecipesService {
             RecipesDto recipesDto = RecipesDto.builder()
                     .Id(recipes.getId())
                     .nameOfFood(recipes.getNameOfFood())
+                    .imageBase64(recipes.getImageBase64())
                     .createdBy(recipes.getCreatedBy())
                     .createdAt(recipes.getCreatedAt())
                     .lastUpdatedBy(recipes.getLastUpdatedBy())
@@ -260,6 +288,7 @@ public class RecipeServiceImpl implements RecipesService {
         log.info("КОНЕЦ: RecipeServiceImpl - update(). Обноленная запись - {}", recipesDto);
         return recipesDto;
     }
+
 
 
 

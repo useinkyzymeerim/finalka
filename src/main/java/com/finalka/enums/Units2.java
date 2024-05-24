@@ -6,7 +6,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum Units2 {
-    gram("г"),
     kilogram("кг"),
     Pieces("шт");
 
