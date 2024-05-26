@@ -24,7 +24,12 @@ public class Menu {
     private Long id;
     private String nameOfMenu;
 
-    @OneToMany(mappedBy = "menu")
+    @ManyToMany
+    @JoinTable(
+            name = "menu_recipe",
+            joinColumns = @JoinColumn(name = "menu_id"),
+            inverseJoinColumns = @JoinColumn(name = "recipe_id")
+    )
     private List<Recipes> recipes;
 
     private String createdBy;

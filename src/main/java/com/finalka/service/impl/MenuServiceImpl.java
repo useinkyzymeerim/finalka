@@ -128,7 +128,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public Map<Products, Integer> calculateRequiredProductsForMenu (Long id){
 
-        List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByRecipe_Menu_Id(id);
+        List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByRecipe_Menus_Id(id);
 
         Map<Products, Integer> productQuantityMap = new HashMap<>();
 

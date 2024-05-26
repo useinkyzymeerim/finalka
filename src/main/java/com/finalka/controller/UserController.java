@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hibernate.query.sqm.tree.SqmNode.log;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -42,6 +44,7 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -63,6 +66,7 @@ public class UserController {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
+
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -75,14 +79,14 @@ public class UserController {
     })
     @Operation(summary = "Роут для поиска рецепт по id")
     @GetMapping("/{id}")
-
-    public ResponseEntity<RecipesDto> findById(@PathVariable Long id){
+    public ResponseEntity<RecipesDto> findById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(recipeService.findById(id), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException){
+        } catch (NullPointerException nullPointerException) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     @PostMapping("/search")
     public ResponseEntity<List<RecipeWithProductDTO>> searchRecipesByProducts(@RequestBody List<String> userProducts) {
         List<RecipeWithProductDTO> recipes = recipeService.findRecipesByProducts(userProducts);
@@ -139,4 +143,14 @@ public class UserController {
         }
     }
 
+    @PostMapping("/add-to-menu")
+    public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
+        try {
+            recipeService.addRecipeToMenu(menuRecipeRequestDto.getMenuId(), menuRecipeRequestDto.getRecipeId());
+            return ResponseEntity.ok("Рецепт успешно добавлен в меню");
+        } catch (Exception e) {
+            log.error("Ошибка при добавлении рецепта в меню", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
+        }
+    }
 }

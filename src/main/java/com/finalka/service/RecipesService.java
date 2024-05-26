@@ -1,10 +1,7 @@
 package com.finalka.service;
 
 
-import com.finalka.dto.ProductDTO;
-import com.finalka.dto.RecipeDetailsDTO;
-import com.finalka.dto.RecipeWithProductDTO;
-import com.finalka.dto.RecipesDto;
+import com.finalka.dto.*;
 import com.finalka.entity.Products;
 import com.finalka.entity.Recipes;
 
@@ -18,5 +15,6 @@ public interface RecipesService {
     RecipesDto findById(Long id);
     List<RecipesDto> findAll () throws Exception;
     RecipesDto update(RecipesDto recipesDto);
+    void addRecipeToMenu(Long menuId, Long recipeId);
 }
 

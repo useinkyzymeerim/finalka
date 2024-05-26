@@ -31,13 +31,13 @@ public class Recipes {
     private Integer quantityOfProduct;
     private Integer cookingTime;
 
-    @OneToMany(mappedBy = "recipe",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "recipe")
     private List<RecipesWithProducts> recipesWithProducts;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Menu menu;
+    @ManyToMany(mappedBy = "recipes")
+    private List<Menu> menus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private User user;
 
     private String createdBy;
