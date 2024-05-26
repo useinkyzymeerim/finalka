@@ -33,7 +33,7 @@ public class Recipes {
     private Integer cookingTime;
 
     @OneToMany(mappedBy = "recipe",fetch = FetchType.LAZY)
-    private List<RecipesWithProducts> recipesWithProducts;
+    private Set<RecipesWithProducts> recipesWithProducts;
 
     @ManyToMany(mappedBy = "recipes")
     private List<Menu> menus;

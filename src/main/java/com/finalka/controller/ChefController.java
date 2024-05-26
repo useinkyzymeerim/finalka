@@ -84,4 +84,15 @@ public class ChefController {
             throw new RuntimeException(e);
         }
     }
+
+    @PostMapping("/add-to-menu")
+    public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
+        try {
+            recipeService.addRecipeToMenu(menuRecipeRequestDto.getMenuId(), menuRecipeRequestDto.getRecipeId());
+            return ResponseEntity.ok("Рецепт успешно добавлен в меню");
+        } catch (Exception e) {
+            log.error("Ошибка при добавлении рецепта в меню", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
+        }
+    }
 }

@@ -25,7 +25,7 @@ public class RecipesWithProducts {
     private Products product;
 
     private Integer quantityOfProduct;
-  //  @Enumerated(value = EnumType.STRING)
+    @Enumerated(value = EnumType.STRING)
     private Units unitsEnum;
 
 
