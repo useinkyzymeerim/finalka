@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bouncycastle.bcpg.S2K;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class Recipes {
     private Integer cookingTime;
 
     @OneToMany(mappedBy = "recipe")
-    private List<RecipesWithProducts> recipesWithProducts;
+    private Set<RecipesWithProducts> recipesWithProducts;
 
     @ManyToMany(mappedBy = "recipes")
     private List<Menu> menus;

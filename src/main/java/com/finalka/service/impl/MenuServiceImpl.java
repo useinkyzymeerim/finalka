@@ -128,7 +128,7 @@ public class MenuServiceImpl implements MenuService {
     @Transactional
     @Override
     public Map<Products, Map.Entry<Integer, Units>> calculateRequiredProductsForMenu(Long id) {
-        List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByRecipe_Menu_Id(id);
+        List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByRecipe_Menus_Id(id);
 
         Map<Products, Map.Entry<Integer, Units>> productQuantityMap = new HashMap<>();
 
@@ -137,7 +137,6 @@ public class MenuServiceImpl implements MenuService {
             int quantity = recipesWithProducts.getQuantityOfProduct();
             Units unit = product.getUnitsEnum();
 
-            // Проверяем, если продукт уже есть в карте, добавляем количество
             if (productQuantityMap.containsKey(product)) {
                 Map.Entry<Integer, Units> entry = productQuantityMap.get(product);
                 int totalQuantity = entry.getKey() + quantity;

@@ -33,7 +33,7 @@ public class RecipeServiceImpl implements RecipesService {
     public RecipeDetailsDTO findRecipeDetails(Long recipeId) {
         Recipes recipe = recipesRepo.findByDeletedAtIsNullAndId(recipeId);
         if (recipe == null) {
-            throw new RuntimeException("Recipe not found or deleted");
+            throw new RuntimeException("Рецепт не найден или удален");
         }
 
         Set<RecipesWithProducts> recipesWithProducts = recipe.getRecipesWithProducts();
@@ -58,7 +58,7 @@ public class RecipeServiceImpl implements RecipesService {
     public List<RecipeWithProductDTO> findRecipesByProducts(List<String> userProducts) {
         List<String> lowerCaseProducts = userProducts.stream()
                 .map(String::toLowerCase)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Recipes> recipes = new ArrayList<>();
         for (String product : lowerCaseProducts) {
@@ -96,26 +96,9 @@ public class RecipeServiceImpl implements RecipesService {
     private List<ProductDTO> mapToProductDTOList(Set<RecipesWithProducts> recipesWithProducts) {
         return recipesWithProducts.stream()
                 .map(recipeProduct -> ProductDTO.builder()
-                        .id(recipeProduct.getProduct().getId())
                         .productName(recipeProduct.getProduct().getProductName())
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    private RecipeWithProductDTO convertToDTO(RecipesWithProducts recipesWithProducts) {
-        RecipeWithProductDTO recipeDTO = new RecipeWithProductDTO();
-        recipeDTO.setId(recipesWithProducts.getRecipe().getId());
-        recipeDTO.setNameOfFood(recipesWithProducts.getRecipe().getNameOfFood());
-
-        return recipeDTO;
-    }
-
-    private RecipesDto convertToDTO(Recipes recipe) {
-        RecipesDto recipeDTO = new RecipesDto();
-        recipeDTO.setId(recipe.getId());
-        recipeDTO.setNameOfFood(recipe.getNameOfFood());
-
-        return recipeDTO;
     }
 
     @Override
