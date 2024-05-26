@@ -238,25 +238,24 @@ public class RecipeServiceImpl implements RecipesService {
     public List<RecipesDto> findAll() {
         log.info("СТАРТ: RecipeServiceImpl - findAll()");
         List<Recipes> recipesList = recipesRepo.findAllByDeletedAtIsNull();
-        if (recipesList == null || recipesList.isEmpty()) {
-            log.error("Список рецептов пуст");
-            throw new NullPointerException("Список рецептов пуст");
+
+        List<RecipesDto> recipesDtos = new ArrayList<>();
+        for (Recipes recipes : recipesList) {
+            RecipesDto recipesDto = RecipesDto.builder()
+                    .Id(recipes.getId())
+                    .nameOfFood(recipes.getNameOfFood())
+                    .imageBase64(recipes.getImageBase64())
+                    .createdBy(recipes.getCreatedBy())
+                    .createdAt(recipes.getCreatedAt())
+                    .lastUpdatedBy(recipes.getLastUpdatedBy())
+                    .lastUpdatedAt(recipes.getLastUpdatedAt())
+                    .deletedBy(recipes.getDeletedBy())
+                    .deletedAt(recipes.getDeletedAt())
+                    .build();
+            recipesDtos.add(recipesDto);
         }
-        List<RecipesDto> recipesDtoList = recipesList.stream()
-                .map(r -> RecipesDto.builder()
-                        .Id(r.getId())
-                        .nameOfFood(r.getNameOfFood())
-                        .createdBy(r.getCreatedBy())
-                        .createdAt(r.getCreatedAt())
-                        .lastUpdatedBy(r.getLastUpdatedBy())
-                        .lastUpdatedAt(r.getLastUpdatedAt())
-                        .deletedBy(r.getDeletedBy())
-                        .deletedAt(r.getDeletedAt())
-                        .build()
-                )
-                .collect(Collectors.toList());
         log.info("КОНЕЦ: RecipeServiceImpl - findAll()");
-        return recipesDtoList;
+        return recipesDtos;
     }
 
     @Transactional
@@ -304,3 +303,4 @@ public class RecipeServiceImpl implements RecipesService {
         return recipesDto;
     }
 }
+
