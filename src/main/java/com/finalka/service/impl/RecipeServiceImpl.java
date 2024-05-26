@@ -6,6 +6,7 @@ import com.finalka.entity.*;
 import com.finalka.enums.Units;
 import com.finalka.repo.*;
 import com.finalka.service.RecipesService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,6 +101,7 @@ public class RecipeServiceImpl implements RecipesService {
                         .build())
                 .collect(Collectors.toList());
     }
+
     private RecipeWithProductDTO convertToDTO(RecipesWithProducts recipesWithProducts) {
         RecipeWithProductDTO recipeDTO = new RecipeWithProductDTO();
         recipeDTO.setId(recipesWithProducts.getRecipe().getId());
@@ -134,12 +136,6 @@ public class RecipeServiceImpl implements RecipesService {
                     .createdAt(new Timestamp(System.currentTimeMillis()))
                     .build();
 
-            if (recipeDTO.getMenuId() != null) {
-                Menu menu = menuRepo.findById(recipeDTO.getMenuId())
-                        .orElseThrow(() -> new IllegalArgumentException("Меню с Id " + recipeDTO.getMenuId() + " не найден"));
-                recipe.setMenu(menu);
-            }
-
             if (recipeDTO.getUserId() != null) {
                 User user = userRepo.findById(recipeDTO.getUserId())
                         .orElseThrow(() -> new IllegalArgumentException("Пользователь с Id " + recipeDTO.getUserId() + " не найден"));
@@ -149,7 +145,6 @@ public class RecipeServiceImpl implements RecipesService {
             Recipes savedRecipe = recipesRepo.save(recipe);
             Long recipeId = savedRecipe.getId();
 
-            // Создаем продукты, связанные с рецептом
             for (ProductDTO productDTO : recipeDTO.getProducts()) {
                 List<Products> productList = productRepo.findByProductName(productDTO.getProductName());
 
@@ -189,11 +184,9 @@ public class RecipeServiceImpl implements RecipesService {
             if (optionalRecipe.isPresent()) {
                 Recipes recipe = optionalRecipe.get();
 
-
                 Optional<Products> optionalProduct = productRepo.findById(productId);
                 if (optionalProduct.isPresent()) {
                     Products product = optionalProduct.get();
-
 
                     RecipesWithProducts recipeProduct = new RecipesWithProducts();
                     recipeProduct.setRecipe(recipe);
@@ -262,28 +255,38 @@ public class RecipeServiceImpl implements RecipesService {
     public List<RecipesDto> findAll() {
         log.info("СТАРТ: RecipeServiceImpl - findAll()");
         List<Recipes> recipesList = recipesRepo.findAllByDeletedAtIsNull();
-        //можно убрать
-        if (recipesList.isEmpty()) {
-            log.error("Актуальных рецептов нет!");
-            throw new NullPointerException("Актуальных рецептов нет!");
+        if (recipesList == null || recipesList.isEmpty()) {
+            log.error("Список рецептов пуст");
+            throw new NullPointerException("Список рецептов пуст");
         }
-        List<RecipesDto> recipesDtos = new ArrayList<>();
-        for (Recipes recipes : recipesList) {
-            RecipesDto recipesDto = RecipesDto.builder()
-                    .Id(recipes.getId())
-                    .nameOfFood(recipes.getNameOfFood())
-                    .imageBase64(recipes.getImageBase64())
-                    .createdBy(recipes.getCreatedBy())
-                    .createdAt(recipes.getCreatedAt())
-                    .lastUpdatedBy(recipes.getLastUpdatedBy())
-                    .lastUpdatedAt(recipes.getLastUpdatedAt())
-                    .deletedBy(recipes.getDeletedBy())
-                    .deletedAt(recipes.getDeletedAt())
-                    .build();
-            recipesDtos.add(recipesDto);
-        }
+        List<RecipesDto> recipesDtoList = recipesList.stream()
+                .map(r -> RecipesDto.builder()
+                        .Id(r.getId())
+                        .nameOfFood(r.getNameOfFood())
+                        .createdBy(r.getCreatedBy())
+                        .createdAt(r.getCreatedAt())
+                        .lastUpdatedBy(r.getLastUpdatedBy())
+                        .lastUpdatedAt(r.getLastUpdatedAt())
+                        .deletedBy(r.getDeletedBy())
+                        .deletedAt(r.getDeletedAt())
+                        .build()
+                )
+                .collect(Collectors.toList());
         log.info("КОНЕЦ: RecipeServiceImpl - findAll()");
-        return recipesDtos;
+        return recipesDtoList;
+    }
+
+    @Transactional
+    @Override
+    public void addRecipeToMenu(Long menuId, Long recipeId) {
+        log.info("START: RecipeServiceImpl - addRecipeToMenu(). Adding recipe {} to menu {}", recipeId, menuId);
+        Menu menu = menuRepo.findById(menuId).orElseThrow(() -> new RuntimeException("Menu not found"));
+        Recipes recipe = recipesRepo.findById(recipeId).orElseThrow(() -> new RuntimeException("Recipe not found"));
+
+        menu.getRecipes().add(recipe);
+        menuRepo.save(menu);
+
+        log.info("END: RecipeServiceImpl - addRecipeToMenu(). Added recipe {} to menu {}", recipeId, menuId);
     }
 
     @Override
@@ -318,4 +321,3 @@ public class RecipeServiceImpl implements RecipesService {
         return recipesDto;
     }
 }
-
