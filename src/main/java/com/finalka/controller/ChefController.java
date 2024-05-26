@@ -1,9 +1,6 @@
 package com.finalka.controller;
 
-import com.finalka.dto.ProductDTO;
-import com.finalka.dto.RecipeWithProductDTO;
-import com.finalka.dto.RecipesDto;
-import com.finalka.dto.UserDto;
+import com.finalka.dto.*;
 import com.finalka.service.RecipesService;
 import com.finalka.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.hibernate.query.sqm.tree.SqmNode.log;
 
 @RestController
 @RequiredArgsConstructor
@@ -83,6 +82,17 @@ public class ChefController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/add-to-menu")
+    public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
+        try {
+            recipeService.addRecipeToMenu(menuRecipeRequestDto.getMenuId(), menuRecipeRequestDto.getRecipeId());
+            return ResponseEntity.ok("Рецепт успешно добавлен в меню");
+        } catch (Exception e) {
+            log.error("Ошибка при добавлении рецепта в меню", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
         }
     }
 }

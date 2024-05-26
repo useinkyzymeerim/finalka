@@ -13,14 +13,6 @@ import java.util.List;
 
 @Repository
 public interface RecipesRepo extends JpaRepository<Recipes,Long> {
-    @Query("SELECT new com.finalka.dto.RecipeDetailsDTO( r.nameOfFood, p.productName, rp.quantityOfProduct) " +
-            "FROM Recipes r " +
-            "JOIN r.recipesWithProducts rp " +
-            "JOIN rp.product p " +
-            "WHERE r.id = :recipeId " +
-            "AND r.deletedAt IS NULL " +
-            "AND p.deletedAt IS NULL")
-    List<RecipeDetailsDTO> findRecipeDetails(@Param("recipeId") Long recipeId);
     List<Recipes> findAllByDeletedAtIsNull();
     Recipes findByDeletedAtIsNullAndId(Long id);
     @Query("SELECT r FROM Recipes r JOIN r.recipesWithProducts rp JOIN rp.product p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :productName, '%'))")

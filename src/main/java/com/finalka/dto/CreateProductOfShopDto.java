@@ -18,5 +18,4 @@ import lombok.NoArgsConstructor;
         private Units2 units2Enum;
         private String type;
         private Integer quantityInStock;
-
     }

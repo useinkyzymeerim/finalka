@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bouncycastle.bcpg.S2K;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -34,10 +35,10 @@ public class Recipes {
     @OneToMany(mappedBy = "recipe",fetch = FetchType.LAZY)
     private Set<RecipesWithProducts> recipesWithProducts;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Menu menu;
+    @ManyToMany(mappedBy = "recipes")
+    private List<Menu> menus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private User user;
 
     private String createdBy;
