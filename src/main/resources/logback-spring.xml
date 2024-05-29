@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="LOG_PATH" value="./files/logs/crm-backend"/>
+    <property name="LOG_FILE_NAME" value="crm-backend"/>
+    <property name="LOG_FILE_MAX_HISTORY" value="20"/>
+
+    <appender name="ConsoleOutput" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%white(%d{ISO8601}) %highlight(%-5level) [%yellow(%t)] : %msg%n%throwable</Pattern>
+        </layout>
+    </appender>
+
+    <appender name="LogFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level : %msg%n</Pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/%d{yyyy, aux}/%d{MM, aux}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="LogFile"/>
+        <appender-ref ref="ConsoleOutput"/>
+    </root>
+
+    <logger name="com.log" level="trace" additivity="false">
+        <appender-ref ref="LogFile"/>
+        <appender-ref ref="ConsoleOutput"/>
+    </logger>
+
+</configuration>
