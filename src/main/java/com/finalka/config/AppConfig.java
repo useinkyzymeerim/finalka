@@ -1,4 +1,4 @@
-package com.finalka.controller.util;
+package com.finalka.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

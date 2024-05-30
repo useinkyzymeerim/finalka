@@ -55,6 +55,7 @@ public class SecurityConfig {
                         "/swagger-resources/", "/webjars/")
                 .permitAll();
         http.authorizeHttpRequests().requestMatchers(HttpMethod.POST, "/api/registration").permitAll();
+        http.authorizeHttpRequests().requestMatchers(HttpMethod.POST, "/api/mail/**").permitAll();
         http.authorizeHttpRequests().requestMatchers("/api/chefs/**").hasAuthority( "CHEF");
         http.authorizeHttpRequests().requestMatchers("/api/users/**").hasAuthority( "USER");
         http.authorizeHttpRequests().anyRequest().authenticated();
