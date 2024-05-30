@@ -9,9 +9,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,11 +38,18 @@ public class ChefController {
     })
     @Operation(summary = "Роут для создание рецепта")
     @PostMapping
-    public ResponseEntity<String> createRecipeWithProducts(@RequestBody RecipeWithProductDTO recipeDto) {
+    public ResponseEntity<?> createRecipeWithProducts(@Valid @RequestBody RecipeWithProductDTO recipeDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            StringBuilder errorMsg = new StringBuilder();
+            bindingResult.getAllErrors().forEach(error ->
+                    errorMsg.append(error.getDefaultMessage()).append("; "));
+            return new ResponseEntity<>("Ошибки валидации: " + errorMsg.toString(), HttpStatus.BAD_REQUEST);
+        }
+
         try {
             recipeService.createRecipeWithProducts(recipeDto);
             return new ResponseEntity<>("Рецепт успешно создан", HttpStatus.CREATED);
-        } catch (Exception e){
+        } catch (Exception e) {
             return new ResponseEntity<>("Не удалось создать рецепт", HttpStatus.BAD_REQUEST);
         }
     }
