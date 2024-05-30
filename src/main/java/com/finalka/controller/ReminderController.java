@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 
-
 @RestController
 @RequestMapping("/api/reminders")
 @RequiredArgsConstructor
@@ -22,10 +21,9 @@ public class ReminderController {
     public ResponseEntity<String> setReminder(@RequestParam Long userId,
                                               @RequestParam int hour,
                                               @RequestParam int minute,
-                                              @RequestParam String message,
-                                              @RequestParam String email) {
+                                              @RequestParam String message) {
         try {
-            reminderService.setReminder(userId, hour, minute, message, email);
+            reminderService.setReminder(userId, hour, minute, message);
             return ResponseEntity.ok("Напоминание установлено успешно.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось установить напоминание.");
@@ -40,16 +38,6 @@ public class ReminderController {
             return ResponseEntity.ok("Напоминание успешно отменено.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось отменить напоминание.");
-        }
-    }
-
-    @PostMapping("/test-email")
-    public ResponseEntity<String> testEmail(@RequestParam String email) {
-        try {
-            reminderService.sendTestEmail(email);
-            return ResponseEntity.ok("Test email sent successfully.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send test email.");
         }
     }
 }

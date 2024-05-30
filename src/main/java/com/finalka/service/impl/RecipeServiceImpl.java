@@ -119,12 +119,6 @@ public class RecipeServiceImpl implements RecipesService {
                     .createdAt(new Timestamp(System.currentTimeMillis()))
                     .build();
 
-            if (recipeDTO.getUserId() != null) {
-                User user = userRepo.findById(recipeDTO.getUserId())
-                        .orElseThrow(() -> new IllegalArgumentException("Пользователь с Id " + recipeDTO.getUserId() + " не найден"));
-                recipe.setUser(user);
-            }
-
             Recipes savedRecipe = recipesRepo.save(recipe);
             Long recipeId = savedRecipe.getId();
 

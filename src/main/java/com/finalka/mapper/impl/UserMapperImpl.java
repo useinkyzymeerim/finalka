@@ -18,6 +18,7 @@ public class UserMapperImpl implements UserMapper {
                 .surname(user.getSurname())
                 .username(user.getUsername())
                 .roles(user.getRoles())
+                .email(user.getEmail())
                 .lastAuthentication(user.getLastAuthentication())
                 .phoneNumber(user.getPhoneNumber())
                 .build();
@@ -32,6 +33,7 @@ public class UserMapperImpl implements UserMapper {
                 .username(userDto.getUsername())
                 .password(userDto.getPassword())
                 .roles(userDto.getRoles())
+                .email(userDto.getEmail())
                 .lastAuthentication(userDto.getLastAuthentication())
                 .phoneNumber(userDto.getPhoneNumber())
                 .build();

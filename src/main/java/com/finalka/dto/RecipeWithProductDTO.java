@@ -1,9 +1,5 @@
 package com.finalka.dto;
 
-import com.finalka.entity.Menu;
-import com.finalka.entity.User;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,8 +20,6 @@ public class RecipeWithProductDTO {
     private String linkOfVideo;
     private Integer quantityOfProduct;
     private Integer cookingTime;
-    private Long menuId;
-    private Long userId;
     private List<ProductDTO> products;
     private String createdBy;
     private Timestamp createdAt;

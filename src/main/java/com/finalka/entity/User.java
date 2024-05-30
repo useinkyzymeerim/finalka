@@ -30,6 +30,7 @@ import static jakarta.persistence.FetchType.EAGER;
         private String surname;
         private String username;
         private String password;
+        private String email;
 
         @ManyToMany(fetch = EAGER)
         private Set<Role> roles = new HashSet<>();
