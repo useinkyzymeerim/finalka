@@ -1,21 +1,19 @@
 package com.finalka.entity;
 
 
+import com.finalka.validations.ValidPassword;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
 
-    @Entity
+@Entity
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -26,9 +24,18 @@ import static jakarta.persistence.FetchType.EAGER;
         @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_seq_generator")
         @SequenceGenerator(name = "users_seq_generator", sequenceName = "users_seq", allocationSize = 1)
         private Long id;
+        @NonNull
+        @Column(name = "NAME",nullable = false)
         private String name;
+        @NonNull
+        @Column(name = "SURNAME",nullable = false)
+
         private String surname;
+        @NonNull
+        @Column(name = "USERNAME",nullable = false,length = 30,unique = true)
         private String username;
+        @NotNull
+        @ValidPassword
         private String password;
         private String email;
 
@@ -36,6 +43,7 @@ import static jakarta.persistence.FetchType.EAGER;
         private Set<Role> roles = new HashSet<>();
 
         private LocalDateTime lastAuthentication;
+        @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Invalid phone number")
         private String phoneNumber;
 
 

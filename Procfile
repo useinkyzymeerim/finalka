@@ -1,0 +1,1 @@
+web: java -Dserver.port=$JAVA_OPTS -jar target\WeeklyMenu-1.0.jar
