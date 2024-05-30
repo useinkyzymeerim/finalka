@@ -46,30 +46,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors().and()
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(STATELESS)
-                .and()
-                .authorizeHttpRequests()
-                .requestMatchers("/api/login/", "/api/token/refresh/", "/api", "/api/logout/").permitAll()
-                .requestMatchers("/swagger-ui/", "/v3/api-docs/", "/swagger-ui.html", "/swagger-resources/", "/webjars/").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/registration").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/mail/**").permitAll()
-                .requestMatchers("/api/chefs/**").hasAuthority("CHEF")
-                .requestMatchers("/api/users/**").hasAuthority("USER")
-                .anyRequest().authenticated()
-                .and()
-                .oauth2Login()
-                .defaultSuccessUrl("/api/user", true)
-                .and()
-                .apply(CustomSecurityDetails.customDsl(userRepo))
-                .and()
-                .addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .logout()
-                .logoutUrl("/api/logout")
-                .logoutSuccessUrl("/api/login")
-                .invalidateHttpSession(true);
-
+        http.cors().and().
+                csrf().disable();
+        http.sessionManagement().sessionCreationPolicy(STATELESS);
+        http.authorizeHttpRequests().requestMatchers("/api/login/", "/api/token/refresh/",
+                "/api", "/api/logout/").permitAll();
+        http.authorizeHttpRequests().requestMatchers(
+                        "/swagger-ui/", "/v3/api-docs/", "/swagger-ui.html",
+                        "/swagger-resources/", "/webjars/")
+                .permitAll();
+        http.authorizeHttpRequests().requestMatchers(HttpMethod.POST, "/api/registration").permitAll();
+        http.authorizeHttpRequests().requestMatchers("/api/chefs/**").hasAuthority( "CHEF");
+        http.authorizeHttpRequests().requestMatchers("/api/users/**").hasAuthority( "USER");
+        http.authorizeHttpRequests().anyRequest().authenticated();
+        http.apply(CustomSecurityDetails.customDsl(userRepo));
+        http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.logout().logoutUrl("/api/logout").logoutSuccessUrl("/api/login").invalidateHttpSession(true);
         return http.build();
     }
 
@@ -88,4 +80,5 @@ public class SecurityConfig {
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
         return new CorsFilter(urlBasedCorsConfigurationSource);
     }
+
 }
