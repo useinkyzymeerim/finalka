@@ -1,7 +1,9 @@
 package com.finalka.service.impl;
 
 import com.finalka.entity.Reminder;
+import com.finalka.entity.User;
 import com.finalka.repo.ReminderRepo;
+import com.finalka.repo.UserRepo;
 import com.finalka.service.MailService;
 import com.finalka.service.ReminderService;
 import jakarta.mail.MessagingException;
@@ -21,9 +23,15 @@ public class ReminderServiceImpl implements ReminderService {
     private final Map<Long, ScheduledFuture<?>> reminders = new ConcurrentHashMap<>();
     private final ReminderRepo reminderRepo;
     private final MailService mailService;
+    private final UserRepo userRepo;
 
     @Transactional
-    public void setReminder(Long userId, int hour, int minute, String message, String email) {
+    public void setReminder(Long userId, int hour, int minute, String message) {
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        String email = user.getEmail();
         long delay = calculateDelay(hour, minute);
 
         LocalDateTime reminderTime = LocalDateTime.now().plusSeconds(delay / 1000);
@@ -67,9 +75,5 @@ public class ReminderServiceImpl implements ReminderService {
             reminderTime = reminderTime.plusHours(24);
         }
         return Duration.between(now, reminderTime).toMillis();
-    }
-
-    public void sendTestEmail(String email) throws MessagingException {
-        mailService.sendSimpleMessage(email, "Test Email", "This is a test email.");
     }
 }

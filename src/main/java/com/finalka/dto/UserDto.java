@@ -17,6 +17,7 @@ public class UserDto {
     private String surname;
     private String username;
     private String password;
+    private String email;
     private Date removeDate;
     private Set<Role> roles;
 
