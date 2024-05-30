@@ -17,7 +17,7 @@ public class Reminder {
     @SequenceGenerator(name = "reminder_seq_generator", sequenceName = "reminder_seq", allocationSize = 1)
     private Long id;
     private Long userId;
-
     private LocalDateTime reminderTime;
     private String message;
+    private String email;
 }
