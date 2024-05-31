@@ -17,20 +17,20 @@ public class Review {
 
     @ManyToOne
     @JoinColumn(name = "recipe_id", nullable = false)
-    @NotNull(message = "Recipe must not be null")
+    @NotNull(message = "Рецепт не должен быть пустым")
     private Recipes recipe;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @NotNull(message = "User must not be null")
+    @NotNull(message = "Пользователь не должен быть пустым")
     private User user;
 
-    @NotBlank(message = "Comment must not be blank")
-    @Size(max = 500, message = "Comment must not exceed 500 characters")
+    @NotBlank(message = "Комментарий не должен быть пустым")
+    @Size(max = 500, message = "Комментарий не должен превышать 500 символов")
     private String comment;
 
-    @Min(value = 1, message = "Rating must be at least 1")
-    @Max(value = 5, message = "Rating must be at most 5")
+    @Min(value = 1, message = "Рейтинг должен быть не менее 1")
+    @Max(value = 5, message = "Рейтинг должен быть не более 1 5")
     private int rating;
 
     @PastOrPresent(message = "Creation date must be in the past or present")
