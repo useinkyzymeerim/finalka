@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.Set;
 
 @Entity
-@Table
+@Table(name = "productForRecipes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
