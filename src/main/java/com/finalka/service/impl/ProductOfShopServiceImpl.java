@@ -133,8 +133,9 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     }
 
     // Фильтрация продуктов по наличию на складе
+    @Transactional(readOnly = true)
     public List<ProductOfShopDto> filterProductsByAvailability(boolean inStock) {
-        List<ProductOfShop> filteredProducts = productOfShopRepo.findByInStock(inStock);
+        List<ProductOfShop> filteredProducts = productOfShopRepo.findByInStockAndDeletedFalse(inStock);
         return filteredProducts.stream()
                 .map(product -> modelMapper.map(product, ProductOfShopDto.class))
                 .collect(Collectors.toList());

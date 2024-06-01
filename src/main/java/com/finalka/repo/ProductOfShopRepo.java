@@ -15,6 +15,6 @@ public interface ProductOfShopRepo extends JpaRepository<ProductOfShop, Long> {
 
       List<ProductOfShop> findByType(String type);
 
-    List<ProductOfShop> findByInStock(boolean inStock);
+    List<ProductOfShop> findByInStockAndDeletedFalse(boolean inStock);
     Optional<ProductOfShop> findByProductNameIgnoreCaseContainingAndDeletedFalse(String productName);
 }
