@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -87,6 +88,14 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     public ProductOfShopDto getProduct(Long productId) {
         ProductOfShop product = productOfShopRepo.findByIdAndDeletedFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+        return modelMapper.map(product, ProductOfShopDto.class);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductOfShopDto getProductByName(String productName) {
+        ProductOfShop product = productOfShopRepo.findByProductNameIgnoreCaseContainingAndDeletedFalse(productName)
+                .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+
         return modelMapper.map(product, ProductOfShopDto.class);
     }
 

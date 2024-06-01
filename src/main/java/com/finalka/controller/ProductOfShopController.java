@@ -17,7 +17,7 @@ import java.util.List;
 public class ProductOfShopController {
     private final ProductOfShopService productOfShopService;
 
-    @PostMapping("/")
+    @PostMapping()
     public ResponseEntity<String> save(@RequestBody CreateProductOfShopDto createProductOfShopDto){
         try {
             productOfShopService.createProduct(createProductOfShopDto);
@@ -55,6 +55,13 @@ public class ProductOfShopController {
         List<ProductOfShopDto> products = productOfShopService.getAllProducts();
         return ResponseEntity.ok(products);
     }
+
+    @GetMapping("/findByName/{productName}")
+    public ResponseEntity<ProductOfShopDto> getProductByName(@PathVariable String productName) {
+        ProductOfShopDto productDto = productOfShopService.getProductByName(productName);
+        return ResponseEntity.ok(productDto);
+    }
+
 
 
     @GetMapping("/filterByType")
