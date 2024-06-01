@@ -32,29 +32,32 @@ public class ProductsServiceImpl implements ProductService {
     @Override
     public String delete(Long id) {
         log.info("СТАРТ: ProductsServiceImpl - delete(). Удалить запись с id {}", id);
-        Products products = productRepo.findByDeletedAtIsNullAndId(id);
-        if (products == null) {
-            log.error("Продукт с id " + id + " не найдена!");
-            throw new NullPointerException("Продукт с id " + id + " не найдена!");
+        Optional<Products> productsOptional = productRepo.findByDeletedAtIsNullAndId(id);
+        if (productsOptional.isEmpty()) {
+            log.error("Продукт с id " + id + " не найден!");
+            throw new NullPointerException("Продукт с id " + id + " не найден!");
         }
+        Products products = productsOptional.get();
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
         products.setDeletedBy(username);
         products.setDeletedAt(new Timestamp(System.currentTimeMillis()));
         productRepo.save(products);
-        log.info("КОНЕЦ: ProductsServiceImpl - delete(). Удаленна запись с id {}", id);
-        return "Продукт с id " + id + " была удалена!";
+        log.info("КОНЕЦ: ProductsServiceImpl - delete(). Удалена запись с id {}", id);
+        return "Продукт с id " + id + " был удален!";
     }
 
     @Override
     public ProductDTO findById(Long id) {
         log.info("СТАРТ: ProductsServiceImpl - findById({})", id);
-        Products products = productRepo.findByDeletedAtIsNullAndId(id);
-        if (products == null) {
-            log.error("Продукт с id " + id + " не найдена!");
-            throw new NullPointerException("Продукт с id " + id + " не найдена!");
+        Optional<Products> productsOptional = productRepo.findByDeletedAtIsNullAndId(id);
+        if (productsOptional.isEmpty()) {
+            log.error("Продукт с id " + id + " не найден!");
+            throw new NullPointerException("Продукт с id " + id + " не найден!");
         }
+        Products products = productsOptional.get();
         log.info("КОНЕЦ: ProductsServiceImpl - findById(). Product - {} ", products);
         return ProductDTO.builder()
                 .id(products.getId())
@@ -66,7 +69,6 @@ public class ProductsServiceImpl implements ProductService {
                 .deletedBy(products.getDeletedBy())
                 .deletedAt(products.getDeletedAt())
                 .build();
-
     }
     @Override
     public List<ProductDTO> findAll() {
@@ -96,14 +98,14 @@ public class ProductsServiceImpl implements ProductService {
     @Override
     public ProductDTO update(ProductDTO productDTO) {
         log.info("СТАРТ: ProductsServiceImpl - update({})", productDTO);
-        Products products = productRepo.findByDeletedAtIsNullAndId(productDTO.getId());
-        if (products == null) {
-            log.error("Продукт с id " + productDTO.getId() + " не найдена!");
-            throw new NullPointerException("Продукт с id " + productDTO.getId() + " не найдена!");
+        Optional<Products> productsOptional = productRepo.findByDeletedAtIsNullAndId(productDTO.getId());
+        if (productsOptional.isEmpty()) {
+            log.error("Продукт с id " + productDTO.getId() + " не найден!");
+            throw new NullPointerException("Продукт с id " + productDTO.getId() + " не найден!");
         }
+        Products products = productsOptional.get();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-
 
         Products updatedProduct = Products.builder()
                 .id(productDTO.getId())
@@ -121,7 +123,7 @@ public class ProductsServiceImpl implements ProductService {
         productDTO.setLastUpdatedBy(username);
         productDTO.setLastUpdatedAt(updatedProduct.getLastUpdatedAt());
 
-        log.info("КОНЕЦ: ProductsServiceImpl - update(). Обноленная запись - {}", productDTO);
+        log.info("КОНЕЦ: ProductsServiceImpl - update(). Обновленная запись - {}", productDTO);
         return productDTO;
     }
 

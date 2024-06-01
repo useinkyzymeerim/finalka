@@ -10,11 +10,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RecipesRepo extends JpaRepository<Recipes,Long> {
     List<Recipes> findAllByDeletedAtIsNull();
-    Recipes findByDeletedAtIsNullAndId(Long id);
+    Optional<Recipes> findByDeletedAtIsNullAndId(Long id);
     @Query("SELECT r FROM Recipes r JOIN r.recipesWithProducts rp JOIN rp.product p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :productName, '%'))")
     List<Recipes> findByProductNameContainingIgnoreCase(@Param("productName") String productName);
 }
