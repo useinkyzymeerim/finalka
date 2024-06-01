@@ -31,10 +31,13 @@ public class RecipeServiceImpl implements RecipesService {
     @Transactional
     @Override
     public RecipeDetailsDTO findRecipeDetails(Long recipeId) {
-        Recipes recipe = recipesRepo.findByDeletedAtIsNullAndId(recipeId);
-        if (recipe == null) {
-            throw new RuntimeException("Рецепт не найден или удален");
-        }
+        log.info("СТАРТ: RecipeServiceImpl - findRecipeDetails({})", recipeId);
+
+        Optional<Recipes> recipeOptional = recipesRepo.findByDeletedAtIsNullAndId(recipeId);
+        Recipes recipe = recipeOptional.orElseThrow(() -> {
+            log.error("Рецепт с id " + recipeId + " не найден!");
+            return new RuntimeException("Рецепт с id " + recipeId + " не найден или удален");
+        });
 
         Set<RecipesWithProducts> recipesWithProducts = recipe.getRecipesWithProducts();
 
@@ -46,11 +49,14 @@ public class RecipeServiceImpl implements RecipesService {
                     .build();
         }).collect(Collectors.toList());
 
-        return RecipeDetailsDTO.builder()
+        RecipeDetailsDTO recipeDetailsDTO = RecipeDetailsDTO.builder()
                 .recipeName(recipe.getNameOfFood())
                 .productDetailsDtos(productDetailsDtos)
                 .quantityOfProduct(recipe.getQuantityOfProduct())
                 .build();
+
+        log.info("КОНЕЦ: RecipeServiceImpl - findRecipeDetails(). Детали рецепта - {}", recipeDetailsDTO);
+        return recipeDetailsDTO;
     }
 
     @Transactional
@@ -188,11 +194,11 @@ public class RecipeServiceImpl implements RecipesService {
     @Override
     public String delete(Long id) {
         log.info("СТАРТ: RecipeServiceImpl - delete(). Удалить запись с id {}", id);
-        Recipes recipes = recipesRepo.findByDeletedAtIsNullAndId(id);
-        if (recipes == null) {
-            log.error("Рецепт с id " + id + " не найдена!");
-            throw new NullPointerException("Рецепт с id " + id + " не найдена!");
-        }
+        Optional<Recipes> recipesOptional = recipesRepo.findByDeletedAtIsNullAndId(id);
+        Recipes recipes = recipesOptional.orElseThrow(() -> {
+            log.error("Рецепт с id " + id + " не найден!");
+            return new NullPointerException("Рецепт с id " + id + " не найден!");
+        });
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -200,20 +206,22 @@ public class RecipeServiceImpl implements RecipesService {
         recipes.setDeletedBy(username);
         recipes.setDeletedAt(new Timestamp(System.currentTimeMillis()));
         recipesRepo.save(recipes);
-        log.info("КОНЕЦ: RecipeServiceImpl - delete(). Удаленна запись с id {}", id);
-        return "Рецепт с id " + id + " была удалена!";
+        log.info("КОНЕЦ: RecipeServiceImpl - delete(). Удалена запись с id {}", id);
+        return "Рецепт с id " + id + " был удален!";
     }
 
     @Override
     public RecipesDto findById(Long id) {
         log.info("СТАРТ: RecipeServiceImpl - findById({})", id);
 
-        Recipes recipes = recipesRepo.findByDeletedAtIsNullAndId(id);
-        if (recipes == null) {
-            log.error("Рецепт с id " + id + " не найдена!");
-            throw new NullPointerException("Рецепт с id " + id + " не найдена!");
-        }
+        Optional<Recipes> recipesOptional = recipesRepo.findByDeletedAtIsNullAndId(id);
+        Recipes recipes = recipesOptional.orElseThrow(() -> {
+            log.error("Рецепт с id " + id + " не найден!");
+            return new NullPointerException("Рецепт с id " + id + " не найден!");
+        });
+
         log.info("КОНЕЦ: RecipeServiceImpl - findById(). Recipe - {} ", recipes);
+
         return RecipesDto.builder()
                 .Id(recipes.getId())
                 .nameOfFood(recipes.getNameOfFood())
@@ -224,7 +232,6 @@ public class RecipeServiceImpl implements RecipesService {
                 .deletedBy(recipes.getDeletedBy())
                 .deletedAt(recipes.getDeletedAt())
                 .build();
-
     }
 
     @Transactional
@@ -265,17 +272,19 @@ public class RecipeServiceImpl implements RecipesService {
         log.info("END: RecipeServiceImpl - addRecipeToMenu(). Added recipe {} to menu {}", recipeId, menuId);
     }
 
+    @Transactional
     @Override
     public RecipesDto update(RecipesDto recipesDto) {
         log.info("СТАРТ: RecipeServiceImpl - update({})", recipesDto);
-        Recipes recipes =recipesRepo.findByDeletedAtIsNullAndId(recipesDto.getId());
-        if (recipes == null) {
-            log.error("Рецепт с id " + recipesDto.getId() + " не найдена!");
-            throw new NullPointerException("Рецепт с id " + recipesDto.getId() + " не найдена!");
-        }
+
+        Optional<Recipes> recipesOptional = recipesRepo.findByDeletedAtIsNullAndId(recipesDto.getId());
+        Recipes recipes = recipesOptional.orElseThrow(() -> {
+            log.error("Рецепт с id " + recipesDto.getId() + " не найден!");
+            return new NullPointerException("Рецепт с id " + recipesDto.getId() + " не найден!");
+        });
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-
 
         Recipes updatedRecipes = Recipes.builder()
                 .id(recipesDto.getId())
@@ -293,7 +302,7 @@ public class RecipeServiceImpl implements RecipesService {
         recipesDto.setLastUpdatedBy(username);
         recipesDto.setLastUpdatedAt(updatedRecipes.getLastUpdatedAt());
 
-        log.info("КОНЕЦ: RecipeServiceImpl - update(). Обноленная запись - {}", recipesDto);
+        log.info("КОНЕЦ: RecipeServiceImpl - update(). Обновленная запись - {}", recipesDto);
         return recipesDto;
     }
 }

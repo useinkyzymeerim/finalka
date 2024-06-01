@@ -11,5 +11,5 @@ import java.util.Optional;
 public interface MenuRepo extends JpaRepository<Menu,Long> {
 
     List<Menu> findAllByDeletedAtIsNull();
-    Menu findByDeletedAtIsNullAndId(Long id);
+    Optional<Menu> findByDeletedAtIsNullAndId(Long id);
 }

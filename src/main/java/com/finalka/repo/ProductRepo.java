@@ -12,7 +12,6 @@ import java.util.Optional;
 @Repository
 public interface ProductRepo extends JpaRepository<Products,Long> {
     List<Products> findAllByDeletedAtIsNull();
-    Products findByDeletedAtIsNullAndId(Long id);
-
+    Optional<Products> findByDeletedAtIsNullAndId(Long id);
     List<Products> findByProductName(String productName);
 }
