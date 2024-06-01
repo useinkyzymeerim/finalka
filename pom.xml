@@ -159,7 +159,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.expert.backend.FinalkaApplication</mainClass>
+                    <mainClass>com.finalka.FinalkaApplication</mainClass>
                     <layout>JAR</layout>
                 </configuration>
                 <executions>
