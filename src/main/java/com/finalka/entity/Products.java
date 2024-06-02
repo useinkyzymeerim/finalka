@@ -15,14 +15,15 @@ import java.util.Date;
 import java.util.Set;
 
 @Entity
+@Table(name = "productsForRecipes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Products {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "products_seq_generator")
-    @SequenceGenerator(name = "products_seq_generator", sequenceName = "products_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_for_recipes_seq_generator")
+    @SequenceGenerator(name = "product_for_recipes_seq_generator", sequenceName = "product_for_recipes_seq", allocationSize = 1)
     private Long id;
 
     @NotNull(message = "Название продукта не должно быть пустым")
