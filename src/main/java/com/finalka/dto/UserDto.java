@@ -25,7 +25,7 @@ public class UserDto {
     @NotNull(message = "Имя пользователя не должно быть пустым")
     private String username;
 
-    @ValidPassword
+    // @ValidPassword
     private String password;
     @NotNull(message = "Email не должен быть пустым")
     private String email;

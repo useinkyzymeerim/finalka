@@ -1,8 +1,14 @@
 package com.finalka.service;
 
-import jakarta.mail.MessagingException;
+import com.finalka.dto.CreateReminderDto;
+import com.finalka.dto.ReminderDto;
+
+import java.util.List;
 
 public interface ReminderService {
-    void setReminder(Long userId, int hour, int minute, String message);
-    void cancelReminder(Long userId);
+    void setReminder(int hour, int minute, String message);
+    void cancelReminder(Long reminderId);
+    List<ReminderDto> getAllReminders();
+    void updateReminder(Long reminderId, CreateReminderDto reminderDto);
+    void deleteReminder(Long reminderId);
 }

@@ -220,4 +220,26 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
         }
     }
+
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "В базе есть доступные рецепты",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = RecipesDto.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Рецепта нет")
+    })
+    @Operation(summary = "Роут возвращает все не удаленные рецепты")
+    @GetMapping("/all")
+    public ResponseEntity<List<RecipesDto>> findAll() {
+        try {
+            return new ResponseEntity<>(recipeService.findAll(), HttpStatus.OK);
+        } catch (NullPointerException nullPointerException) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
