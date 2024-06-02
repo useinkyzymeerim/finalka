@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="LOG_PATH" value="./files/logs/crm-backend"/>
-    <property name="LOG_FILE_NAME" value="crm-backend"/>
+    <property name="LOG_PATH" value="./files/logs/finalka"/>
+    <property name="LOG_FILE_NAME" value="finalka"/>
     <property name="LOG_FILE_MAX_HISTORY" value="20"/>
 
     <appender name="ConsoleOutput" class="ch.qos.logback.core.ConsoleAppender">

@@ -16,12 +16,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -44,7 +46,12 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         User user = (User) authentication.getPrincipal();
 
-        com.finalka.entity.User myUser = userRepo.findByUsername(user.getUsername());
+        Optional<com.finalka.entity.User> optionalMyUser = userRepo.findByUsername(user.getUsername());
+        if (optionalMyUser.isEmpty()) {
+            throw new UsernameNotFoundException("Пользователь не найден");
+        }
+
+        com.finalka.entity.User myUser = optionalMyUser.get();
 
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setId(myUser.getId());
