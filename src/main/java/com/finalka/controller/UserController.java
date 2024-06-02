@@ -39,8 +39,19 @@ public class UserController {
     private final MenuService menuService;
     private final ReviewService reviewService;
 
+    @Operation(summary = "Этот роут обновляет данные пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @PutMapping()
-    public ResponseEntity<UserDto> update(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> update(@Valid @RequestBody UserDto userDto) {
         try {
             return new ResponseEntity<>(service.update(userDto), HttpStatus.OK);
         } catch (RuntimeException runtimeException) {
@@ -89,12 +100,34 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    @Operation(summary = "Этот роут для поиска рецепта по нескольким продуктам")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @PostMapping("/search")
     public ResponseEntity<List<RecipeWithProductDTO>> searchRecipesByProducts(@RequestBody List<String> userProducts) {
         List<RecipeWithProductDTO> recipes = recipeService.findRecipesByProducts(userProducts);
         return ResponseEntity.ok(recipes);
     }
+    @Operation(summary = "Этот роут возвращает количество всех продуктов в одном меню по айди")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @GetMapping("/{menuId}/requiredProducts")
     public ResponseEntity<?> getRequiredProductsForMenu(@PathVariable Long menuId) {
@@ -113,16 +146,18 @@ public class UserController {
         }
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<RecipesDto>> findAll() {
-        try {
-            return new ResponseEntity<>(recipeService.findAll(), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+
+    @Operation(summary = "Этот роут для создание отзыва")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @PostMapping("/review")
     public ResponseEntity<?> createReview(@Valid @RequestBody ReviewDTO reviewDTO, BindingResult bindingResult) {
@@ -143,6 +178,18 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "Этот роут возвращает отзыв к рецепту по его айди")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
+
     @GetMapping("/recipe/{recipeId}")
     public ResponseEntity<List<ReviewDTO>> getReviewsByRecipeId(@PathVariable Long recipeId) {
         try {
@@ -152,7 +199,17 @@ public class UserController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    @Operation(summary = "Этот роут для добовление рецептов в меню")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @PostMapping("/add-to-menu")
     public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
         try {

@@ -18,5 +18,6 @@ public interface RecipesRepo extends JpaRepository<Recipes,Long> {
     Optional<Recipes> findByDeletedAtIsNullAndId(Long id);
     @Query("SELECT r FROM Recipes r JOIN r.recipesWithProducts rp JOIN rp.product p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :productName, '%'))")
     List<Recipes> findByProductNameContainingIgnoreCase(@Param("productName") String productName);
+    List<Recipes> findByCreatedByAndDeletedAtIsNull(String username);
 }
 

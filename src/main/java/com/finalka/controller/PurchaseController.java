@@ -1,9 +1,6 @@
 package com.finalka.controller;
 
-import com.finalka.dto.MenuDTO;
-import com.finalka.dto.ProductDTO;
-import com.finalka.dto.PurchaseDTO;
-import com.finalka.dto.PurchaseDetailsDto;
+import com.finalka.dto.*;
 import com.finalka.service.ProductService;
 import com.finalka.service.PurchaseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +23,17 @@ public class PurchaseController {
 
     private final PurchaseService purchaseService;
 
+    @Operation(summary = "Этот роут для покупки")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @PostMapping("/{cartId}")
     public ResponseEntity<String> purchaseProducts(@PathVariable Long cartId) {
         try {
@@ -37,6 +45,18 @@ public class PurchaseController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при выполнении покупки.");
         }
     }
+
+    @Operation(summary = "Этот роут возвращает купленые  продукты по айди покупки")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @GetMapping("/{id}")
     public ResponseEntity<PurchaseDetailsDto> getPurchaseWithProducts(@PathVariable Long id) {

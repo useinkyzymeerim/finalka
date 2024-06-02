@@ -1,7 +1,15 @@
 package com.finalka.controller;
 
+import com.finalka.dto.MenuWithRecipeDTO;
 import com.finalka.service.MailService;
 import com.finalka.service.impl.ReminderServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +24,20 @@ public class ReminderController {
 
     private final ReminderServiceImpl reminderService;
 
+    @Operation(summary = "Этот роут для установки напоминание")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @PostMapping("/set")
     @Transactional
-    public ResponseEntity<String> setReminder(@RequestParam Long userId,
+    public ResponseEntity<String> setReminder(@Valid @RequestParam Long userId,
                                               @RequestParam int hour,
                                               @RequestParam int minute,
                                               @RequestParam String message) {
@@ -29,6 +48,17 @@ public class ReminderController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось установить напоминание.");
         }
     }
+    @Operation(summary = "Этот роут отменяет  напоминание по айди пользователя ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @DeleteMapping("/cancel/{userId}")
     @Transactional

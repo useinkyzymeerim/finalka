@@ -21,15 +21,15 @@ public class Reminder {
     @SequenceGenerator(name = "reminder_seq_generator", sequenceName = "reminder_seq", allocationSize = 1)
     private Long id;
 
-    @NotNull(message = "User ID must not be null")
+    @NotNull(message = "Идентификатор пользователя не должен быть пустым")
     private Long userId;
 
-    @NotNull(message = "Reminder time must not be null")
-    @Future(message = "Reminder time must be in the future")
+    @NotNull(message = "Время напоминания не должно быть нулевым")
+    @Future(message = "Время напоминания должно наступить в будущем")
     private LocalDateTime reminderTime;
 
-    @NotBlank(message = "Message must not be blank")
-    @Size(max = 255, message = "Message must not exceed 255 characters")
+    @NotBlank(message = "Сообщение не должно быть пустым")
+    @Size(max = 255, message = "Длина сообщения не должна превышать 255 символов")
     private String message;
     private String email;
 }

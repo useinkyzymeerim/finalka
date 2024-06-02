@@ -45,7 +45,6 @@ public class ChefController {
                     errorMsg.append(error.getDefaultMessage()).append("; "));
             return new ResponseEntity<>("Ошибки валидации: " + errorMsg.toString(), HttpStatus.BAD_REQUEST);
         }
-
         try {
             recipeService.createRecipeWithProducts(recipeDto);
             return new ResponseEntity<>("Рецепт успешно создан", HttpStatus.CREATED);
@@ -63,13 +62,21 @@ public class ChefController {
                     responseCode = "404",
                     description = "Рецепт не найден")
     })
-    @Operation(summary = "Роуд удаляет рецепт по id")
+    @Operation(summary = "Роут удаляет рецепт по id")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id){
+    public ResponseEntity<String> deleteRecipe(@PathVariable Long id) {
         try {
-            return new ResponseEntity<>(recipeService.delete(id), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            String response = recipeService.delete(id);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (SecurityException e) {
+            log.error("Ошибка доступа при попытке удалить рецепт с id {}", id, e);
+            return new ResponseEntity<>("Вы не имеете прав на удаление этого рецепта", HttpStatus.FORBIDDEN);
+        } catch (NullPointerException e) {
+            log.error("Ошибка при попытке удалить рецепт с id {}", id, e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            log.error("Ошибка при попытке удалить рецепт с id {}", id, e);
+            return new ResponseEntity<>("Не удалось удалить рецепт", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     @ApiResponses(value = {
@@ -82,7 +89,7 @@ public class ChefController {
                     responseCode = "404",
                     description = "Рецепта нет")
     })
-    @Operation(summary = "Роуд возвращает все не удаленные рецепты")
+    @Operation(summary = "Роут возвращает все не удаленные рецепты")
     @GetMapping("/all")
     public ResponseEntity<List<RecipesDto>> findAll() {
         try {
@@ -93,6 +100,48 @@ public class ChefController {
             throw new RuntimeException(e);
         }
     }
+
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "В базе есть доступные рецепты",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = RecipesDto.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Рецепта нет")
+    })
+    @Operation(summary = "Роут возвращает все свои рецепты повара")
+
+    @GetMapping("/allByChef")
+    public ResponseEntity<List<RecipesDto>> getAllRecipesForCurrentUser(@RequestHeader("Authorization") String token) {
+        try {
+
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            String authToken = token.substring(7);
+
+
+            List<RecipesDto> recipes = recipeService.findAllByChef(authToken);
+
+            return ResponseEntity.ok(recipes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @Operation(summary = "Этот роут добовляет рецепты по айди  в меню айди ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @PostMapping("/add-to-menu")
     public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
