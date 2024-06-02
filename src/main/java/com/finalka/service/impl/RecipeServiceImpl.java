@@ -4,9 +4,9 @@ package com.finalka.service.impl;
 import com.finalka.dto.*;
 import com.finalka.entity.*;
 import com.finalka.enums.Units;
+import com.finalka.filter.CustomAuthenticationFilter;
 import com.finalka.repo.*;
 import com.finalka.service.RecipesService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +27,7 @@ public class RecipeServiceImpl implements RecipesService {
     private final ProductRepo productRepo;
     private final UserRepo userRepo;
     private final MenuRepo menuRepo;
+
 
     @Transactional
     @Override
@@ -203,11 +204,22 @@ public class RecipeServiceImpl implements RecipesService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
+        if (recipes == null) {
+            log.error("Рецепт с id " + id + " не найден!");
+            throw new NullPointerException("Рецепт с id " + id + " не найден!");
+        }
+        if (!recipes.getCreatedBy().equals(username)) {
+            log.error("Пользователь {} не имеет прав на удаление рецепта с id {}", username, id);
+            throw new SecurityException("Вы не имеете прав на удаление этого рецепта");
+        }
+
         recipes.setDeletedBy(username);
         recipes.setDeletedAt(new Timestamp(System.currentTimeMillis()));
         recipesRepo.save(recipes);
+
         log.info("КОНЕЦ: RecipeServiceImpl - delete(). Удалена запись с id {}", id);
         return "Рецепт с id " + id + " был удален!";
+
     }
 
     @Override
@@ -232,6 +244,7 @@ public class RecipeServiceImpl implements RecipesService {
                 .deletedBy(recipes.getDeletedBy())
                 .deletedAt(recipes.getDeletedAt())
                 .build();
+
     }
 
     @Transactional
@@ -259,6 +272,42 @@ public class RecipeServiceImpl implements RecipesService {
         return recipesDtos;
     }
 
+
+    @Transactional
+    @Override
+    public List<RecipesDto> findAllByChef(String token) {
+        log.info("СТАРТ: RecipeServiceImpl - findAllByChefFromToken()");
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUser = authentication.getName();
+        if (currentUser == null) {
+            log.error("Пользователь не найден по токену: {}", token);
+            throw new RuntimeException("Пользователь не найден по токену");
+        }
+
+        List<Recipes> recipesList = recipesRepo.findByCreatedByAndDeletedAtIsNull(currentUser);
+        List<RecipesDto> recipesDtos = new ArrayList<>();
+
+        for (Recipes recipes : recipesList) {
+            RecipesDto recipesDto = RecipesDto.builder()
+                    .Id(recipes.getId())
+                    .nameOfFood(recipes.getNameOfFood())
+                    .imageBase64(recipes.getImageBase64())
+                    .createdBy(recipes.getCreatedBy())
+                    .createdAt(recipes.getCreatedAt())
+                    .lastUpdatedBy(recipes.getLastUpdatedBy())
+                    .lastUpdatedAt(recipes.getLastUpdatedAt())
+                    .deletedBy(recipes.getDeletedBy())
+                    .deletedAt(recipes.getDeletedAt())
+                    .build();
+            recipesDtos.add(recipesDto);
+        }
+
+        log.info("КОНЕЦ: RecipeServiceImpl - findAllByChefFromToken()");
+        return recipesDtos;
+    }
+
+
     @Transactional
     @Override
     public void addRecipeToMenu(Long menuId, Long recipeId) {
@@ -285,6 +334,7 @@ public class RecipeServiceImpl implements RecipesService {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
+
 
         Recipes updatedRecipes = Recipes.builder()
                 .id(recipesDto.getId())

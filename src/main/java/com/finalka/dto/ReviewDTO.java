@@ -13,25 +13,26 @@ import java.time.LocalDateTime;
 public class ReviewDTO {
     private Long id;
 
-    @NotNull(message = "Recipe ID must not be null")
+    @NotNull(message = "Идентификатор рецепта не должен быть пустым")
     private Long recipeId;
 
-    @NotNull(message = "User ID must not be null")
+    @NotNull(message = "Идентификатор пользователя не должен быть пустым")
     private Long userId;
 
-    @NotBlank(message = "Comment must not be blank")
-    @Size(max = 500, message = "Comment must not exceed 500 characters")
+    @NotBlank(message = "Комментарий не должен быть пустым")
+    @Size(max = 500, message = "Комментарий не должен превышать 500 символов")
     private String comment;
 
-    @Min(value = 1, message = "Rating must be at least 1")
-    @Max(value = 5, message = "Rating must be at most 5")
+    @Min(value = 1, message = "Рейтинг должен быть не менее 1")
+    @Max(value = 5, message = "Рейтинг должен быть не более 5")
     private int rating;
 
-    @PastOrPresent(message = "Creation date must be in the past or present")
+    @PastOrPresent(message = "Дата создания должна быть в прошлом или настоящем")
     private LocalDateTime createdAt;
 
-    @PastOrPresent(message = "Update date must be in the past or present")
+    @PastOrPresent(message = "Дата обновления должна быть в прошлом или настоящем")
     private LocalDateTime updatedAt;
 }
+
 
 

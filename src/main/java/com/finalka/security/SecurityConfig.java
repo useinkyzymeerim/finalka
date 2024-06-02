@@ -52,7 +52,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests().requestMatchers("/api/login/", "/api/token/refresh/",
                 "/api", "/api/logout/").permitAll();
         http.authorizeHttpRequests().requestMatchers(
-                        "/swagger-ui/", "/v3/api-docs/", "/swagger-ui.html",
+                        "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
                         "/swagger-resources/", "/webjars/")
                 .permitAll();
         http.authorizeHttpRequests().requestMatchers(HttpMethod.POST, "/api/registration").permitAll();

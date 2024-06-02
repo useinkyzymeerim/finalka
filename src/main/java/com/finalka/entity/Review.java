@@ -33,10 +33,10 @@ public class Review {
     @Max(value = 5, message = "Рейтинг должен быть не более 1 5")
     private int rating;
 
-    @PastOrPresent(message = "Creation date must be in the past or present")
+    @PastOrPresent(message = "Дата создания должна быть в прошлом или настоящем")
     private LocalDateTime createdAt;
 
-    @PastOrPresent(message = "Update date must be in the past or present")
+    @PastOrPresent(message = "Дата обновления должна быть в прошлом или настоящем")
     private LocalDateTime updatedAt;
 
     @PrePersist

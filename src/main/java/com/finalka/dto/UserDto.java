@@ -15,20 +15,25 @@ import java.util.Set;
 @Builder
 public class UserDto {
     private Long id;
-    @NotNull
+
+    @NotNull(message = "Имя не должно быть пустым")
     private String name;
-    @NotNull
+
+    @NotNull(message = "Фамилия не должна быть пустой")
     private String surname;
-    @NotNull
+
+    @NotNull(message = "Имя пользователя не должно быть пустым")
     private String username;
+
     @ValidPassword
     private String password;
+    @NotNull(message = "Email не должен быть пустым")
     private String email;
     private Date removeDate;
     private Set<Role> roles;
 
     private LocalDateTime lastAuthentication;
 
-    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Invalid phone number")
+    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Неверный номер телефона")
     private String phoneNumber;
 }

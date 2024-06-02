@@ -41,7 +41,7 @@ public class MenuController {
                     responseCode = "404",
                     description = "Меню нет")
     })
-    @Operation(summary = "Роуд возвращает все не удаленные меню")
+    @Operation(summary = "Роут возвращает все не удаленные меню")
     @GetMapping("/all")
     public ResponseEntity<List<MenuDTO>> findAll(){
         try {
@@ -53,7 +53,7 @@ public class MenuController {
         }
     }
 
-    @Operation(summary = "Получили меню с рецептами по ID")
+    @Operation(summary = "Получение меню с рецептами по ID")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -87,7 +87,6 @@ public class MenuController {
         try {
             Map<Products, Map.Entry<Integer, Units>> productQuantityMap = menuService.calculateRequiredProductsForMenu(menuId);
 
-            // Преобразование данных в удобный для возврата формат
             List<Map<String, Object>> productQuantityList = new ArrayList<>();
             for (Map.Entry<Products, Map.Entry<Integer, Units>> entry : productQuantityMap.entrySet()) {
                 Map<String, Object> productInfo = new HashMap<>();
@@ -132,7 +131,7 @@ public class MenuController {
                     responseCode = "404",
                     description = "Меню не найден")
     })
-    @Operation(summary = "Роуд удаляет меню по id")
+    @Operation(summary = "Роут удаляет меню по id")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id){
         try {
@@ -170,7 +169,7 @@ public class MenuController {
                     responseCode = "404",
                     description = "Меню не найден")
     })
-    @Operation(summary = "Роуд обновляет меню, id отдела передается непосредственно в модели," +
+    @Operation(summary = "Роут обновляет меню, id отдела передается непосредственно в модели," +
             " по ней и идет поиск, важно, что бы все поля не были пустыми иначе засетит null, но передавать создателя и " +
             "обновляющего с датами не нужно, это делает бэк")
     @PutMapping
