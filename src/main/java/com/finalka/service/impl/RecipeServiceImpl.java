@@ -25,39 +25,46 @@ public class RecipeServiceImpl implements RecipesService {
     private final RecipesRepo recipesRepo;
     private final RecipesWithProductsRepo recipesWithProductsRepo;
     private final ProductRepo productRepo;
-    private final UserRepo userRepo;
     private final MenuRepo menuRepo;
-
 
     @Transactional
     @Override
-    public RecipeDetailsDTO findRecipeDetails(Long recipeId) {
-        log.info("СТАРТ: RecipeServiceImpl - findRecipeDetails({})", recipeId);
+    public RecipeDetailsDTO getRecipeWithProductsById(Long recipeId) {
+        try {
+            log.info("START: RecipeServiceImpl - getRecipeWithProductsById() {}", recipeId);
 
-        Optional<Recipes> recipeOptional = recipesRepo.findByDeletedAtIsNullAndId(recipeId);
-        Recipes recipe = recipeOptional.orElseThrow(() -> {
-            log.error("Рецепт с id " + recipeId + " не найден!");
-            return new RuntimeException("Рецепт с id " + recipeId + " не найден или удален");
-        });
+            Recipes recipe = recipesRepo.findById(recipeId)
+                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден или удалён"));
 
-        Set<RecipesWithProducts> recipesWithProducts = recipe.getRecipesWithProducts();
+            if (recipe.getDeletedAt() != null) {
+                throw new RuntimeException("Рецепт с указанным ID был удалён");
+            }
 
-        List<ProductDetailsDto> productDetailsDtos = recipesWithProducts.stream().map(rwp -> {
-            return ProductDetailsDto.builder()
-                    .productName(rwp.getProduct().getProductName())
-                    .quantity(rwp.getQuantityOfProduct())
-                    .unitsEnum(rwp.getUnitsEnum())
+            List<RecipesWithProducts> recipeProducts = recipesWithProductsRepo.findByRecipe(recipe);
+
+            List<ProductDetailsDto> productDetailsDtos = new ArrayList<>();
+            for (RecipesWithProducts recipeProduct : recipeProducts) {
+                ProductDetailsDto productDetailsDto = ProductDetailsDto.builder()
+                        .productName(recipeProduct.getProduct().getProductName())
+                        .quantity(recipeProduct.getQuantityOfProduct())
+                        .unitsEnum(recipeProduct.getUnitsEnum())
+                        .build();
+                productDetailsDtos.add(productDetailsDto);
+            }
+
+            RecipeDetailsDTO recipeDetailsDTO = RecipeDetailsDTO.builder()
+                    .recipeName(recipe.getNameOfFood())
+                    .productDetailsDtos(productDetailsDtos)
+                    .quantityOfProduct(recipe.getQuantityOfProduct())
                     .build();
-        }).collect(Collectors.toList());
 
-        RecipeDetailsDTO recipeDetailsDTO = RecipeDetailsDTO.builder()
-                .recipeName(recipe.getNameOfFood())
-                .productDetailsDtos(productDetailsDtos)
-                .quantityOfProduct(recipe.getQuantityOfProduct())
-                .build();
+            log.info("END: RecipeServiceImpl - getRecipeWithProductsById {}", recipeId);
 
-        log.info("КОНЕЦ: RecipeServiceImpl - findRecipeDetails(). Детали рецепта - {}", recipeDetailsDTO);
-        return recipeDetailsDTO;
+            return recipeDetailsDTO;
+        } catch (Exception e) {
+            log.error("Не удалось получить рецепт с продуктами", e);
+            throw new RuntimeException("Не удалось получить рецепт с продуктами", e);
+        }
     }
 
     @Transactional
