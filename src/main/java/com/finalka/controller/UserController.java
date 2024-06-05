@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,30 +35,10 @@ import static org.hibernate.query.sqm.tree.SqmNode.log;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserServiceImpl service;
     private final RecipesService recipeService;
     private final MenuService menuService;
     private final ReviewService reviewService;
 
-    @Operation(summary = "Этот роут обновляет данные пользователя")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Успешная операция",
-                    content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Не найдено")
-    })
-    @PutMapping()
-    public ResponseEntity<UserDto> update(@Valid @RequestBody UserDto userDto) {
-        try {
-            return new ResponseEntity<>(service.update(userDto), HttpStatus.OK);
-        } catch (RuntimeException runtimeException) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
 
     @ApiResponses(value = {
             @ApiResponse(
@@ -72,12 +53,13 @@ public class UserController {
     })
     @Operation(summary = "Этот роут возвращает Рецепты с продуктами по ID")
     @GetMapping("/{recipeId}/products")
-    public ResponseEntity<RecipeDetailsDTO> getRecipeDetails(@PathVariable Long recipeId) {
+    public ResponseEntity<RecipeDetailsDTO> getRecipeById(@PathVariable Long recipeId) {
         try {
-            RecipeDetailsDTO recipeDetails = recipeService.findRecipeDetails(recipeId);
-            return new ResponseEntity<>(recipeDetails, HttpStatus.OK);
+            RecipeDetailsDTO recipeDetailsDTO = recipeService.getRecipeWithProductsById(recipeId);
+            return ResponseEntity.ok(recipeDetailsDTO);
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
@@ -134,13 +116,16 @@ public class UserController {
         try {
             Map<Products, Map.Entry<Integer, Units>> productQuantityMap = menuService.calculateRequiredProductsForMenu(menuId);
 
-
-            Map<String, Integer> productQuantityStringMap = new HashMap<>();
+            List<Map<String, Object>> productQuantityList = new ArrayList<>();
             for (Map.Entry<Products, Map.Entry<Integer, Units>> entry : productQuantityMap.entrySet()) {
-                productQuantityStringMap.put(entry.getKey().getProductName(), entry.getValue().getKey());
+                Map<String, Object> productInfo = new HashMap<>();
+                productInfo.put("productName", entry.getKey().getProductName());
+                productInfo.put("quantity", entry.getValue().getKey());
+                productInfo.put("unit", entry.getValue().getValue().toString());
+                productQuantityList.add(productInfo);
             }
 
-            return new ResponseEntity<>(productQuantityStringMap, HttpStatus.OK);
+            return new ResponseEntity<>(productQuantityList, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>("Failed to calculate required products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
