@@ -70,37 +70,7 @@ public class MenuController {
         List<RecipesDto> recipes = menuService.getRecipesByMenuId(menuId);
         return ResponseEntity.ok(recipes);
     }
-    @Operation(summary = "Этот роут возвращает количество всех продуктов в одном меню по айди")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Успешная операция",
-                    content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Не найдено")
-    })
 
-    @GetMapping("/{menuId}/requiredProducts")
-    public ResponseEntity<?> getRequiredProductsForMenu(@PathVariable Long menuId) {
-        try {
-            Map<Products, Map.Entry<Integer, Units>> productQuantityMap = menuService.calculateRequiredProductsForMenu(menuId);
-
-            List<Map<String, Object>> productQuantityList = new ArrayList<>();
-            for (Map.Entry<Products, Map.Entry<Integer, Units>> entry : productQuantityMap.entrySet()) {
-                Map<String, Object> productInfo = new HashMap<>();
-                productInfo.put("productName", entry.getKey().getProductName());
-                productInfo.put("quantity", entry.getValue().getKey());
-                productInfo.put("unit", entry.getValue().getValue().toString());
-                productQuantityList.add(productInfo);
-            }
-
-            return new ResponseEntity<>(productQuantityList, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>("Failed to calculate required products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",

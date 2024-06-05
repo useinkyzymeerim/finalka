@@ -9,7 +9,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 
 public interface RecipesService {
-    RecipeDetailsDTO findRecipeDetails(Long recipeId);
+    RecipeDetailsDTO getRecipeWithProductsById(Long recipeId);
     List<RecipeWithProductDTO> findRecipesByProducts(List<String> userProducts);
     void createRecipeWithProducts(RecipeWithProductDTO recipeDTO);
     String delete(Long id);
