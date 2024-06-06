@@ -34,6 +34,5 @@ public class UserDto {
 
     private LocalDateTime lastAuthentication;
 
-    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Неверный номер телефона")
-    private String phoneNumber;
+
 }

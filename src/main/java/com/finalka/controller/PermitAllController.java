@@ -16,20 +16,16 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/registration")
-public class RegistrationController {
+@RequestMapping("api/all")
+public class PermitAllController {
 
     private final UserServiceImpl service;
     private final UserRepo repo;
@@ -76,7 +72,7 @@ public class RegistrationController {
                     responseCode = "404",
                     description = "Не найдено")
     })
-    @GetMapping("/all")
+    @GetMapping("/allRecipe")
     public ResponseEntity<List<RecipesDto>> findAll() {
         try {
             return new ResponseEntity<>(recipesService.findAll(), HttpStatus.OK);

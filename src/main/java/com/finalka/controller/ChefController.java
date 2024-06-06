@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import static org.hibernate.query.sqm.tree.SqmNode.log;
-
+@Tag(name = "MagicMenu", description = "Тут находятся все роуты для поваров")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chefs")
@@ -38,6 +39,7 @@ public class ChefController {
     })
     @Operation(summary = "Роут для создание рецепта")
     @PostMapping
+
     public ResponseEntity<?> createRecipeWithProducts(@Valid @RequestBody RecipeWithProductDTO recipeDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             StringBuilder errorMsg = new StringBuilder();
@@ -89,28 +91,6 @@ public class ChefController {
                     responseCode = "404",
                     description = "Рецепта нет")
     })
-    @Operation(summary = "Роут возвращает все не удаленные рецепты")
-    @GetMapping("/all")
-    public ResponseEntity<List<RecipesDto>> findAll() {
-        try {
-            return new ResponseEntity<>(recipeService.findAll(), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "В базе есть доступные рецепты",
-                    content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = RecipesDto.class)))}),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Рецепта нет")
-    })
     @Operation(summary = "Роут возвращает все свои рецепты повара")
 
     @GetMapping("/allByChef")
@@ -129,28 +109,6 @@ public class ChefController {
             return ResponseEntity.ok(recipes);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-    @Operation(summary = "Этот роут добовляет рецепты по айди  в меню айди ")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Успешная операция",
-                    content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Не найдено")
-    })
-
-    @PostMapping("/add-to-menu")
-    public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
-        try {
-            recipeService.addRecipeToMenu(menuRecipeRequestDto.getMenuId(), menuRecipeRequestDto.getRecipeId());
-            return ResponseEntity.ok("Рецепт успешно добавлен в меню");
-        } catch (Exception e) {
-            log.error("Ошибка при добавлении рецепта в меню", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
         }
     }
 }

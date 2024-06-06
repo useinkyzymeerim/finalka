@@ -10,6 +10,8 @@ import com.finalka.repo.UserRepo;
 import com.finalka.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,6 +30,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final JavaMailSender mailSender;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -47,7 +50,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
         User user = userMapper.toEntity(userDto);
         userRepo.save(user);
+        sendRegistrationEmail(userDto);
         return userMapper.toDto(user);
+    }
+
+    private void sendRegistrationEmail(UserDto userDto) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(userDto.getEmail());
+        message.setSubject("Регистрация успешна");
+        message.setText("Регистрация прошла успешно! Добро пожаловать, " + userDto.getUsername() + "!");
+        mailSender.send(message);
     }
     @Override
     public UserDto getById(Long id) {
