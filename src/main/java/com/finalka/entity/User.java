@@ -43,8 +43,7 @@ import static jakarta.persistence.FetchType.EAGER;
         private Set<Role> roles = new HashSet<>();
 
         private LocalDateTime lastAuthentication;
-        @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Неверный номер телефона")
-        private String phoneNumber;
+
 
 
     }

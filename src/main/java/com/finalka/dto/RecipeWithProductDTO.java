@@ -21,23 +21,25 @@ import jakarta.validation.constraints.*;
 public class RecipeWithProductDTO {
     private Long id;
 
-    @NotBlank(message = "Name of food must not be blank")
+    @NotBlank(message = "Название блюда не должно быть пустым")
     private String nameOfFood;
 
-    @NotBlank(message = "Description must not be blank")
-    @Size(max = 1000, message = "Description must not exceed 1000 characters")
+    @NotBlank(message = "Описание блюда не должно быть пустым")
+    @Size(max = 1000, message = "Описание не должно превышать 1000 символов")
     private String description;
+    @NotNull(message = "Поле порции не должно быть пустым" )
+    private Integer portion;
 
     private byte[] imageBase64;
 
     private String linkOfVideo;
 
-    @NotNull(message = "Quantity of product must not be null")
-    @Min(value = 1, message = "Quantity of product must be at least 1")
+    @NotNull(message = "Количество продуктов не должно быть пустым")
+    @Min(value = 1, message = "Количество продукта должно быть не менее 1")
     private Integer quantityOfProduct;
 
-    @NotNull(message = "Cooking time must not be null")
-    @Min(value = 1, message = "Cooking time must be at least 1 minute")
+    @NotNull(message = "Время приготовления не должно быть пустым")
+    @Min(value = 1, message = "Время приготовления должно составлять не менее 1 минуты")
     private Integer cookingTime;
     private List<ProductDTO> products;
 

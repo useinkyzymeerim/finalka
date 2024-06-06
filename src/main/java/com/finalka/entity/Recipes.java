@@ -20,7 +20,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class Recipes {
     @Id
-    @GeneratedValue (strategy = GenerationType.SEQUENCE, generator = "recipes_seq_generator")
+    @GeneratedValue (strategy = GenerationType.IDENTITY, generator = "recipes_seq_generator")
     @SequenceGenerator(name = "recipes_seq_generator", sequenceName = "recipes_seq", allocationSize = 1)
     private Long id;
 
@@ -31,7 +31,8 @@ public class Recipes {
     @NotNull(message = "Описание не должно быть пустым")
     @Size(min = 1, message = "Описание должно содержать хотя бы один символ")
     private String description;
-
+    @NotNull(message = "Поле порции не должно быть пустым" )
+    private Integer portion;
     @Basic(fetch = FetchType.EAGER)
     @Lob
     private byte[] imageBase64;
