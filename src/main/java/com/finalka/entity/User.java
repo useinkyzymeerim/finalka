@@ -44,7 +44,6 @@ import static jakarta.persistence.FetchType.EAGER;
 
         private LocalDateTime lastAuthentication;
 
-
-
-    }
+        private String resetToken;
+}
 

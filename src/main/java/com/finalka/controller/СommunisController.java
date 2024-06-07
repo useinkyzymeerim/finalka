@@ -30,6 +30,7 @@ public class СommunisController {
     private final CartService cartService;
     private final ProductOfShopService productOfShopService;
     private final PurchaseService purchaseService;
+    private final UserService userService;
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -456,6 +457,25 @@ public class СommunisController {
         return ResponseEntity.ok(purchaseDetailsDto);
     }
 
+    @PutMapping("/update")
+    public ResponseEntity<UserDto> updateUser(@RequestBody UpdateUserDto updateUserDto) {
+        UserDto updatedUser = userService.updateUser(updateUserDto);
+        return ResponseEntity.ok(updatedUser);
+    }
 
+    @PostMapping("/password-reset-request")
+    public ResponseEntity<?> requestPasswordReset(@RequestBody ResetPasswordRequest request) {
+        userService.generateResetToken(request.getEmail());
+        return ResponseEntity.ok("Запрос на сброс пароля успешно обработан.");
+    }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
+        try {
+            userService.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
+            return ResponseEntity.ok("Пароль успешно обновлен.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
