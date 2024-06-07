@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -116,6 +117,7 @@ public class RecipeServiceImpl implements RecipesService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public void createRecipeWithProducts(RecipeWithProductDTO recipeDTO) {
         try {
@@ -332,37 +334,124 @@ public class RecipeServiceImpl implements RecipesService {
 
     @Transactional
     @Override
-    public RecipesDto update(RecipesDto recipesDto) {
-        log.info("СТАРТ: RecipeServiceImpl - update({})", recipesDto);
+    public RecipeUpdateDTO updateRecipe(RecipeUpdateDTO recipeUpdateDTO) {
+        try {
+            log.info("START: RecipeServiceImpl - updateRecipe() {}", recipeUpdateDTO);
 
-        Optional<Recipes> recipesOptional = recipesRepo.findByDeletedAtIsNullAndId(recipesDto.getId());
-        Recipes recipes = recipesOptional.orElseThrow(() -> {
-            log.error("Рецепт с id " + recipesDto.getId() + " не найден!");
-            return new NullPointerException("Рецепт с id " + recipesDto.getId() + " не найден!");
-        });
+            Recipes recipe = recipesRepo.findById(recipeUpdateDTO.getId())
+                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден или удалён"));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+            if (recipe.getDeletedAt() != null) {
+                throw new RuntimeException("Рецепт с указанным ID был удалён");
+            }
 
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            recipe.setNameOfFood(recipeUpdateDTO.getNameOfFood());
+            recipe.setDescription(recipeUpdateDTO.getDescription());
+            recipe.setImageBase64(recipeUpdateDTO.getImageBase64());
+            recipe.setLinkOfVideo(recipeUpdateDTO.getLinkOfVideo());
+            recipe.setQuantityOfProduct(recipeUpdateDTO.getQuantityOfProduct());
+            recipe.setCookingTime(recipeUpdateDTO.getCookingTime());
+            recipe.setLastUpdatedBy(username);
+            recipe.setLastUpdatedAt(new Timestamp(System.currentTimeMillis()));
 
-        Recipes updatedRecipes = Recipes.builder()
-                .id(recipesDto.getId())
-                .nameOfFood(recipesDto.getNameOfFood())
-                .createdBy(recipes.getCreatedBy())
-                .createdAt(recipes.getCreatedAt())
-                .lastUpdatedBy(username)
-                .lastUpdatedAt(new Timestamp(System.currentTimeMillis()))
-                .build();
+            recipesRepo.save(recipe);
 
-        recipesRepo.save(updatedRecipes);
+            for (ProductUpdateDTO productUpdateDTO : recipeUpdateDTO.getProducts()) {
+                boolean isNewProduct = false;
 
-        recipesDto.setCreatedBy(recipes.getCreatedBy());
-        recipesDto.setCreatedAt(recipes.getCreatedAt());
-        recipesDto.setLastUpdatedBy(username);
-        recipesDto.setLastUpdatedAt(updatedRecipes.getLastUpdatedAt());
+                List<Products> productsList = productRepo.findByProductName(productUpdateDTO.getProductName());
+                Products existingProduct = null;
 
-        log.info("КОНЕЦ: RecipeServiceImpl - update(). Обновленная запись - {}", recipesDto);
-        return recipesDto;
+                for (Products product : productsList) {
+                    if (product.getDeletedAt() == null) {
+                        existingProduct = product;
+                        break;
+                    }
+                }
+
+                if (existingProduct == null) {
+                    Products newProduct = new Products();
+                    newProduct.setProductName(productUpdateDTO.getProductName());
+                    newProduct.setQuantity(productUpdateDTO.getQuantity());
+                    newProduct.setUnitsEnum(productUpdateDTO.getUnitsEnum());
+                    newProduct.setCreatedBy(username);
+                    newProduct.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                    productRepo.save(newProduct);
+
+                    RecipesWithProducts newRecipesWithProducts = new RecipesWithProducts();
+                    newRecipesWithProducts.setRecipe(recipe);
+                    newRecipesWithProducts.setProduct(newProduct);
+                    newRecipesWithProducts.setQuantityOfProduct(productUpdateDTO.getQuantity());
+                    newRecipesWithProducts.setUnitsEnum(productUpdateDTO.getUnitsEnum());
+                    recipesWithProductsRepo.save(newRecipesWithProducts);
+
+                    isNewProduct = true;
+                } else {
+                    existingProduct.setQuantity(productUpdateDTO.getQuantity());
+                    existingProduct.setUnitsEnum(productUpdateDTO.getUnitsEnum());
+                    existingProduct.setLastUpdatedBy(username);
+                    existingProduct.setLastUpdatedAt(new Timestamp(System.currentTimeMillis()));
+                    productRepo.save(existingProduct);
+
+                    RecipesWithProducts recipesWithProducts = recipesWithProductsRepo.findByRecipeAndProduct(recipe, existingProduct)
+                            .orElseThrow(() -> new RuntimeException("Связь между рецептом и продуктом не найдена"));
+
+                    recipesWithProducts.setQuantityOfProduct(productUpdateDTO.getQuantity());
+                    recipesWithProducts.setUnitsEnum(productUpdateDTO.getUnitsEnum());
+                    recipesWithProductsRepo.save(recipesWithProducts);
+                }
+
+                if (isNewProduct) {
+                    RecipesWithProducts oldRecipesWithProducts = recipesWithProductsRepo.findByRecipeAndProduct(recipe, existingProduct)
+                            .orElse(null);
+                    if (oldRecipesWithProducts != null) {
+                        recipesWithProductsRepo.delete(oldRecipesWithProducts);
+                    }
+                }
+            }
+
+            log.info("END: RecipeServiceImpl - updateRecipe() {}", recipeUpdateDTO);
+            return recipeUpdateDTO;
+
+        } catch (Exception e) {
+            log.error("Не удалось обновить рецепт с продуктами", e);
+            throw new RuntimeException("Не удалось обновить рецепт с продуктами", e);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void removeProductFromRecipe(Long recipeId, Long productId) {
+        try {
+            log.info("START: RecipeServiceImpl - removeProductFromRecipe() recipeId: {}, productId: {}", recipeId, productId);
+
+            Recipes recipe = recipesRepo.findById(recipeId)
+                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден или удалён"));
+
+            if (recipe.getDeletedAt() != null) {
+                throw new RuntimeException("Рецепт с указанным ID был удалён");
+            }
+
+            Products product = productRepo.findById(productId)
+                    .orElseThrow(() -> new RuntimeException("Продукт с указанным ID не найден или удалён"));
+
+            if (product.getDeletedAt() != null) {
+                throw new RuntimeException("Продукт с указанным ID был удалён");
+            }
+
+            RecipesWithProducts recipesWithProducts = recipesWithProductsRepo.findByRecipeAndProduct(recipe, product)
+                    .orElseThrow(() -> new RuntimeException("Связь между рецептом и продуктом не найдена"));
+
+            recipesWithProductsRepo.delete(recipesWithProducts);
+
+            log.info("END: RecipeServiceImpl - removeProductFromRecipe() recipeId: {}, productId: {}", recipeId, productId);
+
+        } catch (Exception e) {
+            log.error("Не удалось удалить связь продукта с рецептом", e);
+            throw new RuntimeException("Не удалось удалить связь продукта с рецептом", e);
+        }
     }
 }
 

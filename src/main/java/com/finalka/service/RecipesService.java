@@ -15,12 +15,12 @@ public interface RecipesService {
     String delete(Long id);
     RecipesDto findById(Long id);
     List<RecipesDto> findAll () throws Exception;
-    RecipesDto update(RecipesDto recipesDto);
+    RecipeUpdateDTO updateRecipe(RecipeUpdateDTO recipeUpdateDTO) ;
 
     @Transactional
     List<RecipesDto> findAllByChef(String chefUsername);
 
     void addRecipeToMenu(Long menuId, Long recipeId);
-
+    void removeProductFromRecipe(Long recipeId, Long productId);
 }
 

@@ -7,6 +7,7 @@ import com.finalka.enums.Units;
 import com.finalka.service.MenuService;
 import com.finalka.service.RecipesService;
 import com.finalka.service.ReviewService;
+import com.finalka.service.UserService;
 import com.finalka.service.impl.ReminderServiceImpl;
 import com.finalka.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,7 @@ public class UserController {
     private final RecipesService recipeService;
     private final MenuService menuService;
     private final ReviewService reviewService;
+    private final UserService service;
     private final ReminderServiceImpl reminderService;
 
 
@@ -49,7 +51,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Все записи получены успешно",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = RecipesDto.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = RecipeDetailsDTO.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Рецепта с продуктами не найдены")
@@ -280,14 +282,34 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            String authToken = token.substring(7);
-
             List<ReminderDto> reminders = reminderService.getUserReminders();
 
             return ResponseEntity.ok(reminders);
         } catch (Exception e) {
             log.error("Ошибка при получении напоминаний пользователя", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<UserDto> updateUser(@RequestBody UpdateUserDto updateUserDto) {
+        UserDto updatedUser = service.updateUser(updateUserDto);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PostMapping("/password-reset-request")
+    public ResponseEntity<?> requestPasswordReset(@RequestBody ResetPasswordRequest request) {
+        service.generateResetToken(request.getEmail());
+        return ResponseEntity.ok("Запрос на сброс пароля успешно обработан.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
+        try {
+            service.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
+            return ResponseEntity.ok("Пароль успешно обновлен.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

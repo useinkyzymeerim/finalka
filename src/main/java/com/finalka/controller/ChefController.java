@@ -111,4 +111,42 @@ public class ChefController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @Operation(summary = "Этот роут добовляет рецепты по айди  в меню айди ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
+
+    @PostMapping("/add-to-menu")
+    public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
+        try {
+            recipeService.addRecipeToMenu(menuRecipeRequestDto.getMenuId(), menuRecipeRequestDto.getRecipeId());
+            return ResponseEntity.ok("Рецепт успешно добавлен в меню");
+        } catch (Exception e) {
+            log.error("Ошибка при добавлении рецепта в меню", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
+        }
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<RecipeUpdateDTO> updateRecipe(@RequestBody RecipeUpdateDTO recipeUpdateDTO) {
+        RecipeUpdateDTO updatedRecipe = recipeService.updateRecipe(recipeUpdateDTO);
+        return ResponseEntity.ok(updatedRecipe);
+    }
+
+    @DeleteMapping("/{recipeId}/products/{productId}")
+    public ResponseEntity<String> removeProductFromRecipe(@PathVariable Long recipeId, @PathVariable Long productId) {
+        try {
+            recipeService.removeProductFromRecipe(recipeId, productId);
+            return ResponseEntity.ok("Связь продукта с рецептом успешно удалена");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 }
