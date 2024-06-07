@@ -18,7 +18,4 @@ public class UpdateUserDto {
     private String username;
 
     private String email;
-
-    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Неверный номер телефона")
-    private String phoneNumber;
 }
