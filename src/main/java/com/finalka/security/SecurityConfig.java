@@ -55,7 +55,7 @@ public class SecurityConfig {
                         "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
                         "/swagger-resources/", "/webjars/")
                 .permitAll();
-        http.authorizeHttpRequests().requestMatchers(HttpMethod.POST, "/api/all").permitAll();
+        http.authorizeHttpRequests().requestMatchers(HttpMethod.POST, "/api/all/**").permitAll();
         http.authorizeHttpRequests().requestMatchers("/api/chefs/**").hasAuthority( "CHEF");
         http.authorizeHttpRequests().requestMatchers("/api/users/**").hasAuthority( "USER");
         http.authorizeHttpRequests().requestMatchers("/api/admins/**").hasAuthority( "ADMIN");

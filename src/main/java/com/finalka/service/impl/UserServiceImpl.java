@@ -95,7 +95,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setSurname(updateUserDto.getSurname());
         user.setUsername(updateUserDto.getUsername());
         user.setEmail(updateUserDto.getEmail());
-        user.setPhoneNumber(updateUserDto.getPhoneNumber());
 
         userRepo.save(user);
         return userMapper.toDto(user);

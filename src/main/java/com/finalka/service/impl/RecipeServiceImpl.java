@@ -339,7 +339,7 @@ public class RecipeServiceImpl implements RecipesService {
             log.info("START: RecipeServiceImpl - updateRecipe() {}", recipeUpdateDTO);
 
             Recipes recipe = recipesRepo.findById(recipeUpdateDTO.getId())
-                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден или удалён"));
+                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден"));
 
             if (recipe.getDeletedAt() != null) {
                 throw new RuntimeException("Рецепт с указанным ID был удалён");
@@ -428,14 +428,14 @@ public class RecipeServiceImpl implements RecipesService {
             log.info("START: RecipeServiceImpl - removeProductFromRecipe() recipeId: {}, productId: {}", recipeId, productId);
 
             Recipes recipe = recipesRepo.findById(recipeId)
-                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден или удалён"));
+                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден"));
 
             if (recipe.getDeletedAt() != null) {
                 throw new RuntimeException("Рецепт с указанным ID был удалён");
             }
 
             Products product = productRepo.findById(productId)
-                    .orElseThrow(() -> new RuntimeException("Продукт с указанным ID не найден или удалён"));
+                    .orElseThrow(() -> new RuntimeException("Продукт с указанным ID не найден"));
 
             if (product.getDeletedAt() != null) {
                 throw new RuntimeException("Продукт с указанным ID был удалён");
