@@ -14,7 +14,7 @@ CREATE TABLE product_of_shop (
                                  user_id BIGINT,
                                  product_name VARCHAR(255),
                                  type VARCHAR(255),
-                                 units2enum VARCHAR(255) CHECK (units2enum IN ('kilogram','Pieces')),
+                                 units2enum VARCHAR(255) CHECK (units2enum IN ('kilogram','Pieces','litre')),
                                  PRIMARY KEY (id),
                                  CONSTRAINT FKspiuyyy7xqo5cppkm1tooitxu FOREIGN KEY (cart_id) REFERENCES cart,
                                  CONSTRAINT FK2dgrgdr2pfrbndjmji8qc2obu FOREIGN KEY (user_id) REFERENCES users

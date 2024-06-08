@@ -22,5 +22,4 @@ public class ProductOfShopDto {
     private Units2 units2Enum;
     private Integer quantityInStock;
     private String type;
-    private int quantityPurchased;
 }

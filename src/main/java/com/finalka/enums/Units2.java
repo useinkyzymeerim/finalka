@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 public enum Units2 {
     kilogram("кг"),
+    litre("л"),
     Pieces("шт");
 
     private final String units2;
