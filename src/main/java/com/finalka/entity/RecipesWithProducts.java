@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RecipesWithProducts {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "recipes_with_products_seq_generator")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "recipes_with_products_seq_generator")
     @SequenceGenerator(name = "recipes_with_products_seq_generator", sequenceName = "recipes_with_products_seq", allocationSize = 1)
     private Long id;
     @ManyToOne
