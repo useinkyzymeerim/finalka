@@ -30,6 +30,7 @@ public class Recipes {
 
     @NotNull(message = "Описание не должно быть пустым")
     @Size(min = 1, message = "Описание должно содержать хотя бы один символ")
+    @Column(length = 2000)
     private String description;
     @NotNull(message = "Поле порции не должно быть пустым" )
     private Integer portion;
