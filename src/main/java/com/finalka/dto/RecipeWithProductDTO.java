@@ -25,7 +25,7 @@ public class RecipeWithProductDTO {
     private String nameOfFood;
 
     @NotBlank(message = "Описание блюда не должно быть пустым")
-    @Size(max = 1000, message = "Описание не должно превышать 1000 символов")
+    @Size(max = 2000, message = "Описание не должно превышать 2000 символов")
     private String description;
     @NotNull(message = "Поле порции не должно быть пустым" )
     private Integer portion;
