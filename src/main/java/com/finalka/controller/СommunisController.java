@@ -1,6 +1,7 @@
 package com.finalka.controller;
 
 import com.finalka.dto.*;
+import com.finalka.exception.*;
 import com.finalka.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -13,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.hibernate.query.sqm.tree.SqmNode.log;
@@ -43,14 +46,8 @@ public class СommunisController {
     })
     @Operation(summary = "Роут возвращает все не удаленные рецепты")
     @GetMapping("/allRecipes")
-    public ResponseEntity<List<RecipesDto>> findAllRecipes() {
-        try {
-            return new ResponseEntity<>(recipeService.findAll(), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public List<RecipesDto> findAllRecipes() {
+        return recipeService.findAll();
     }
 
     @Operation(summary = "Этот роут для добовление рецептов в меню")
@@ -65,16 +62,9 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @PostMapping("/add-to-menu")
-    public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
-        try {
-            recipeService.addRecipeToMenu(menuRecipeRequestDto.getMenuId(), menuRecipeRequestDto.getRecipeId());
-            return ResponseEntity.ok("Рецепт успешно добавлен в меню");
-        } catch (Exception e) {
-            log.error("Ошибка при добавлении рецепта в меню", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
-        }
+    public String addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
+        return recipeService.addRecipeToMenu(menuRecipeRequestDto);
     }
-
     @Operation(summary = "Этот роут возвращает отзыв к рецепту по его айди")
     @ApiResponses(value = {
             @ApiResponse(
@@ -88,13 +78,8 @@ public class СommunisController {
     })
 
     @GetMapping("/recipe/{recipeId}")
-    public ResponseEntity<List<ReviewDTO>> getReviewsByRecipeId(@PathVariable Long recipeId) {
-        try {
-            List<ReviewDTO> reviews = reviewService.getReviewsByRecipeId(recipeId);
-            return new ResponseEntity<>(reviews, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public List<ReviewDTO> getReviewsByRecipeId(@PathVariable Long recipeId) {
+        return reviewService.getReviewsByRecipeId(recipeId);
     }
 
     @ApiResponses(value = {
@@ -109,13 +94,14 @@ public class СommunisController {
     })
     @Operation(summary = "Роут возвращает все не удаленные меню")
     @GetMapping("/allMenu")
-    public ResponseEntity<List<MenuDTO>> findAllMenu(){
+    public List<MenuDTO> findAllMenu(){
         try {
-            return new ResponseEntity<>(menuService.findAll(), HttpStatus.OK);
+            return menuService.findAll();
         } catch (NullPointerException nullPointerException){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return Collections.emptyList();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.error("Произошла ошибка при выполнении запроса поиска меню", e);
+            throw new RuntimeException("Произошла ошибка при выполнении запроса поиска меню", e);
         }
     }
     @Operation(summary = "Получение меню с рецептами по ID")
@@ -131,9 +117,8 @@ public class СommunisController {
     })
 
     @GetMapping("/{menuId}/recipes")
-    public ResponseEntity<List<RecipesDto>> getRecipesByMenuId(@PathVariable Long menuId) {
-        List<RecipesDto> recipes = menuService.getRecipesByMenuId(menuId);
-        return ResponseEntity.ok(recipes);
+    public List<RecipesDto> getRecipesByMenuId(@PathVariable Long menuId) {
+        return menuService.getRecipesByMenuId(menuId);
     }
 
     @ApiResponses(value = {
@@ -167,14 +152,17 @@ public class СommunisController {
                     description = "Меню не найден")
     })
     @Operation(summary = "Роут удаляет меню по id")
-    @DeleteMapping("/{menuId}")
-    public ResponseEntity<String> deleteMenu(@PathVariable Long id){
+    @DeleteMapping("/deleteMenu/{menuId}")
+    public String deleteMenu(@PathVariable Long id) {
         try {
-            return new ResponseEntity<>(menuService.delete(id), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return menuService.delete(id);
+        } catch (MenuNotFoundException e) {
+            return "Меню не найдено: " + e.getMessage();
+        } catch (Exception e) {
+            return "Произошла ошибка при удалении меню: " + e.getMessage();
         }
     }
+
 
     @ApiResponses(value = {
             @ApiResponse(
@@ -187,7 +175,7 @@ public class СommunisController {
                     description = "Меню не найден")
     })
     @Operation(summary = "Роут для поиска меню по id")
-    @GetMapping("/{MenuId}")
+    @GetMapping("/{menuId}")
     public ResponseEntity<MenuDTO> findMenuById(@PathVariable Long id){
         try {
             return new ResponseEntity<>(menuService.findById(id), HttpStatus.OK);
@@ -209,11 +197,13 @@ public class СommunisController {
             " по ней и идет поиск, важно, что бы все поля не были пустыми иначе засетит null, но передавать создателя и " +
             "обновляющего с датами не нужно, это делает бэк")
     @PutMapping("/updateMenu")
-    public ResponseEntity<MenuDTO> updateMenu(@RequestBody MenuDTO menuDTO){
+    public MenuDTO updateMenu(@RequestBody MenuDTO menuDTO) {
         try {
-            return new ResponseEntity<>(menuService.update(menuDTO), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return menuService.update(menuDTO);
+        } catch (MenuNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Произошла ошибка при обновлении меню", e);
         }
     }
 
@@ -229,12 +219,14 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @PostMapping("/saveCart")
-    public ResponseEntity<String> saveCart(@RequestBody CreateCartDto createCartDto){
+    public String saveCart(@RequestBody CreateCartDto createCartDto) {
         try {
             cartService.createCart(createCartDto);
-            return new ResponseEntity<>("Корзина успешно создана", HttpStatus.CREATED);
-        } catch (Exception e){
-            return new ResponseEntity<>("Не удалось создать корзину", HttpStatus.BAD_REQUEST);
+            return "Корзина успешно создана";
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не удалось создать корзину", e);
         }
     }
 
@@ -251,17 +243,18 @@ public class СommunisController {
     })
 
     @PutMapping("/{cartId}/update-product-quantity")
-    public ResponseEntity<CartDetailDto> updateProductQuantityInCart(@PathVariable Long cartId,
-                                                                     @RequestBody UpdateProductQuantityDto updateProductQuantityDto) {
+    public CartDetailDto updateProductQuantityInCart(@PathVariable Long cartId,
+                                                     @RequestBody UpdateProductQuantityDto updateProductQuantityDto) {
         try {
-            CartDetailDto updatedCart = cartService.updateCart(cartId, updateProductQuantityDto);
-            if (updatedCart != null) {
-                return ResponseEntity.ok(updatedCart);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            return cartService.updateCart(cartId, updateProductQuantityDto);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (CartNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (ProductNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Не удалось обновить корзину", e);
         }
     }
     @Operation(summary = "Этот роут возвращает корзину по айди")
@@ -276,12 +269,13 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @GetMapping("/{cartId}")
-    public ResponseEntity<CartDetailDto> getCartById(@PathVariable Long cartId) {
-        CartDetailDto cartDto = cartService.findCartById(cartId);
-        if (cartDto != null) {
-            return new ResponseEntity<>(cartDto, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public CartDetailDto getCartById(@PathVariable Long cartId) {
+        try {
+            return cartService.findCartById(cartId);
+        } catch (CartNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Не удалось получить корзину", e);
         }
     }
     @Operation(summary = "Этот роут для добовления продукта по айди в корзину ")
@@ -296,12 +290,14 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @PostMapping("/{cartId}/addProduct/{productId}")
-    public ResponseEntity<String> addProductToCart(@PathVariable Long cartId, @PathVariable Long productId) {
+    public String addProductToCart(@PathVariable Long cartId, @PathVariable Long productId) {
         try {
             cartService.addProductToCart(cartId, productId);
-            return new ResponseEntity<>("Товар успешно добавлен в корзину", HttpStatus.CREATED);
+            return "Товар успешно добавлен в корзину";
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>("Не удалось добавить товар в корзину", HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не удалось добавить товар в корзину", e);
         }
     }
 
@@ -318,14 +314,10 @@ public class СommunisController {
     })
 
     @DeleteMapping("/{cartId}/removeProduct/{productId}")
-    public ResponseEntity<String> removeProductFromCart(@PathVariable Long cartId, @PathVariable Long productId) {
-        try {
-            cartService.removeProductFromCart(cartId, productId);
-            return new ResponseEntity<>("Товар успешно удален из корзины", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Не удалось удалить товар из корзины", HttpStatus.BAD_REQUEST);
-        }
+    public void removeProductFromCart(Long cartId, Long productId) {
+        cartService.removeProductFromCart(cartId, productId);
     }
+
 
     @Operation(summary = "Этот роут для получения продукта в магазине по айди ")
     @ApiResponses(value = {
@@ -338,11 +330,11 @@ public class СommunisController {
                     responseCode = "404",
                     description = "Не найдено")
     })
-    @GetMapping("/{productIdInShop}")
-    public ResponseEntity<ProductOfShopDto> getProductOfShop(@PathVariable Long productId) {
-        ProductOfShopDto product = productOfShopService.getProduct(productId);
-        return ResponseEntity.ok(product);
+    @GetMapping("/getProductById/{productIdInShop}")
+    public ProductOfShopDto getProductOfShop(@PathVariable Long productId) {
+        return productOfShopService.getProduct(productId);
     }
+
 
     @Operation(summary = "Этот роут возвращает все продукты в магазине ")
     @ApiResponses(value = {
@@ -357,10 +349,10 @@ public class СommunisController {
     })
 
     @GetMapping("/allProductsOfShop")
-    public ResponseEntity<List<ProductOfShopDto>> getAllProductsOfShop() {
-        List<ProductOfShopDto> products = productOfShopService.getAllProducts();
-        return ResponseEntity.ok(products);
+    public List<ProductOfShopDto> getAllProductsOfShop() {
+        return productOfShopService.getAllProducts();
     }
+
 
     @Operation(summary = "Этот роут возврощяет продукт по его имени ")
     @ApiResponses(value = {
@@ -374,10 +366,10 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @GetMapping("/findByName/{productName}")
-    public ResponseEntity<ProductOfShopDto> getProductByName(@PathVariable String productName) {
-        ProductOfShopDto productDto = productOfShopService.getProductByName(productName);
-        return ResponseEntity.ok(productDto);
+    public ProductOfShopDto getProductByName(@PathVariable String productName) {
+        return productOfShopService.getProductByName(productName);
     }
+
 
     @Operation(summary = "Этот роут возврощяет продукт по его типу ")
     @ApiResponses(value = {
@@ -391,10 +383,11 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @GetMapping("/filterByTypeProduct")
-    public ResponseEntity<List<ProductOfShopDto>> filterProductsByTypeProduct(@RequestParam String type) {
-        List<ProductOfShopDto> filteredProducts = productOfShopService.filterProductsByType(type);
-        return ResponseEntity.ok(filteredProducts);
+    public List<ProductOfShopDto> filterProductsByTypeProduct(@RequestParam String type) {
+        return productOfShopService.filterProductsByType(type);
     }
+
+
     @Operation(summary = "Этот роут возврощает продукты по наличию в магазине")
     @ApiResponses(value = {
             @ApiResponse(
@@ -407,10 +400,11 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @GetMapping("/filterProductsByAvailability")
-    public ResponseEntity<List<ProductOfShopDto>> filterProductsByAvailability(@RequestParam boolean inStock) {
-        List<ProductOfShopDto> filteredProducts = productOfShopService.filterProductsByAvailability(inStock);
-        return ResponseEntity.ok(filteredProducts);
+    public List<ProductOfShopDto> filterProductsByAvailability(@RequestParam boolean inStock) {
+        return productOfShopService.filterProductsByAvailability(inStock);
     }
+
+
     @Operation(summary = "Этот роут для покупки")
     @ApiResponses(value = {
             @ApiResponse(
@@ -423,16 +417,10 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @PostMapping("/{cartId}")
-    public ResponseEntity<String> purchaseProducts(@PathVariable Long cartId) {
-        try {
-            purchaseService.purchaseProductsFromCart(cartId);
-            return ResponseEntity.ok("Покупка успешно завершена.");
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при выполнении покупки.");
-        }
+    public void purchaseProducts(@PathVariable Long cartId) {
+        purchaseService.purchaseProductsFromCart(cartId);
     }
+
 
     @Operation(summary = "Этот роут возвращает купленые  продукты по айди покупки")
     @ApiResponses(value = {
@@ -447,35 +435,23 @@ public class СommunisController {
     })
 
     @GetMapping("/{purchaseId}")
-    public ResponseEntity<PurchaseDetailsDto> getPurchaseWithProducts(@PathVariable Long id) {
-        PurchaseDetailsDto purchaseDetailsDto = purchaseService.getPurchaseWithProducts(id);
-
-        if (purchaseDetailsDto == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(purchaseDetailsDto);
+    public PurchaseDetailsDto getPurchaseWithProducts(@PathVariable Long id) {
+        return purchaseService.getPurchaseWithProducts(id);
     }
 
+
     @PutMapping("/update")
-    public ResponseEntity<UserDto> updateUser(@RequestBody UpdateUserDto updateUserDto) {
-        UserDto updatedUser = userService.updateUser(updateUserDto);
-        return ResponseEntity.ok(updatedUser);
+    public UserDto updateUser(@RequestBody UpdateUserDto updateUserDto) throws InvalidUserDataException, UnauthorizedException {
+        return userService.updateUser(updateUserDto);
     }
 
     @PostMapping("/password-reset-request")
-    public ResponseEntity<?> requestPasswordReset(@RequestBody ResetPasswordRequest request) {
+    public void requestPasswordReset(@RequestBody ResetPasswordRequest request) {
         userService.generateResetToken(request.getEmail());
-        return ResponseEntity.ok("Запрос на сброс пароля успешно обработан.");
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
-        try {
-            userService.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
-            return ResponseEntity.ok("Пароль успешно обновлен.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public void resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
+        userService.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
     }
 }

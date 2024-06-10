@@ -1,6 +1,7 @@
 package com.finalka.controller;
 
 import com.finalka.dto.*;
+import com.finalka.exception.*;
 import com.finalka.service.RecipesService;
 import com.finalka.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -39,19 +41,14 @@ public class ChefController {
     })
     @Operation(summary = "Роут для создание рецепта")
     @PostMapping
-
-    public ResponseEntity<?> createRecipeWithProducts(@Valid @RequestBody RecipeWithProductDTO recipeDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            StringBuilder errorMsg = new StringBuilder();
-            bindingResult.getAllErrors().forEach(error ->
-                    errorMsg.append(error.getDefaultMessage()).append("; "));
-            return new ResponseEntity<>("Ошибки валидации: " + errorMsg.toString(), HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<?> createRecipeWithProducts(@Valid @RequestBody RecipeWithProductDTO recipeDto) {
         try {
             recipeService.createRecipeWithProducts(recipeDto);
             return new ResponseEntity<>("Рецепт успешно создан", HttpStatus.CREATED);
+        } catch (RecipeCreationException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            return new ResponseEntity<>("Не удалось создать рецепт", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     @ApiResponses(value = {
@@ -67,19 +64,8 @@ public class ChefController {
     @Operation(summary = "Роут удаляет рецепт по id")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteRecipe(@PathVariable Long id) {
-        try {
-            String response = recipeService.delete(id);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (SecurityException e) {
-            log.error("Ошибка доступа при попытке удалить рецепт с id {}", id, e);
-            return new ResponseEntity<>("Вы не имеете прав на удаление этого рецепта", HttpStatus.FORBIDDEN);
-        } catch (NullPointerException e) {
-            log.error("Ошибка при попытке удалить рецепт с id {}", id, e);
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            log.error("Ошибка при попытке удалить рецепт с id {}", id, e);
-            return new ResponseEntity<>("Не удалось удалить рецепт", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        String response = recipeService.delete(id);
+        return ResponseEntity.ok(response);
     }
     @ApiResponses(value = {
             @ApiResponse(
@@ -95,21 +81,8 @@ public class ChefController {
 
     @GetMapping("/allByChef")
     public ResponseEntity<List<RecipesDto>> getAllRecipesForCurrentUser(@RequestHeader("Authorization") String token) {
-        try {
-
-            if (token == null || !token.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            String authToken = token.substring(7);
-
-
-            List<RecipesDto> recipes = recipeService.findAllByChef(authToken);
-
-            return ResponseEntity.ok(recipes);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        List<RecipesDto> recipes = recipeService.findAllByChef(token);
+        return ResponseEntity.ok(recipes);
     }
     @Operation(summary = "Этот роут добовляет рецепты по айди  в меню айди ")
     @ApiResponses(value = {
@@ -124,20 +97,20 @@ public class ChefController {
     })
 
     @PostMapping("/add-to-menu")
-    public ResponseEntity<String> addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
-        try {
-            recipeService.addRecipeToMenu(menuRecipeRequestDto.getMenuId(), menuRecipeRequestDto.getRecipeId());
-            return ResponseEntity.ok("Рецепт успешно добавлен в меню");
-        } catch (Exception e) {
-            log.error("Ошибка при добавлении рецепта в меню", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось добавить рецепт в меню");
-        }
+    public String addRecipeToMenu(@RequestBody RecipeAddProductDto menuRecipeRequestDto) {
+        return recipeService.addRecipeToMenu(menuRecipeRequestDto);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<RecipeUpdateDTO> updateRecipe(@RequestBody RecipeUpdateDTO recipeUpdateDTO) {
-        RecipeUpdateDTO updatedRecipe = recipeService.updateRecipe(recipeUpdateDTO);
-        return ResponseEntity.ok(updatedRecipe);
+    public String updateRecipe(@RequestBody RecipeUpdateDTO recipeUpdateDTO) {
+        try {
+            recipeService.updateRecipe(recipeUpdateDTO);
+            return "Рецепт успешно обновлен";
+        } catch (RecipeNotFoundException | RecipeDeletedException | ProductNotFoundException e) {
+            return e.getMessage();
+        } catch (Exception e) {
+            return "Не удалось обновить рецепт с продуктами";
+        }
     }
 
     @DeleteMapping("/{recipeId}/products/{productId}")
@@ -145,8 +118,16 @@ public class ChefController {
         try {
             recipeService.removeProductFromRecipe(recipeId, productId);
             return ResponseEntity.ok("Связь продукта с рецептом успешно удалена");
-        } catch (RuntimeException e) {
+        } catch (RecipeNotFoundException | ProductNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (RecipeDeletedException | ProductDeletedException e) {
+            return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
+        } catch (RecipeProductLinkNotFoundException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (RecipeProductLinkRemovalException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Unexpected error occurred: " + e.getMessage());
         }
     }
 }

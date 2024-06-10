@@ -19,7 +19,7 @@ public interface MenuService {
     List<MenuWithRecipeDTO> getMenuWithRecipes(Long menuId);
 
     MenuDTO findById(Long id);
-    Map<Products, Map.Entry<Integer, Units>> calculateRequiredProductsForMenu (Long id);
+    List<Map<String, Object>>calculateRequiredProductsForMenu (Long id);
     CreateMenuDto save(CreateMenuDto menuDTO);
     MenuDTO update(MenuDTO menuDTO);
     String delete(Long id);
