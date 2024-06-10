@@ -4,16 +4,18 @@ package com.finalka.service.impl;
 import com.finalka.dto.UpdateUserDto;
 import com.finalka.dto.UserDto;
 import com.finalka.entity.User;
+import com.finalka.exception.*;
 import com.finalka.mapper.UserMapper;
 import com.finalka.repo.UserRepo;
 import com.finalka.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.velocity.exception.ResourceNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,21 +53,44 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public UserDto save(UserDto userDto) {
-        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        User user = userMapper.toEntity(userDto);
-        userRepo.save(user);
-        sendRegistrationEmail(userDto);
-        return userMapper.toDto(user);
+    public UserDto save(UserDto userDto) throws UsernameAlreadyExistsException, EmailSendingException, InvalidUserDataException {
+        try {
+            if (userRepo.existsByUsername(userDto.getUsername())) {
+                throw new UsernameAlreadyExistsException("Имя пользователя уже существует");
+            }
+
+            userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            User user = userMapper.toEntity(userDto);
+            userRepo.save(user);
+
+            sendRegistrationEmail(userDto);
+
+            return userMapper.toDto(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new InvalidUserDataException("Ошибка целостности данных: " + e.getMessage());
+        } catch (MailException e) {
+            throw new EmailSendingException("Не удалось отправить письмо с подтверждением. Пожалуйста, попробуйте еще раз.", e);
+        } catch (UsernameAlreadyExistsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Не удалось сохранить пользователя", e);
+        }
     }
 
-    private void sendRegistrationEmail(UserDto userDto) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(userDto.getEmail());
-        message.setSubject("Регистрация успешна");
-        message.setText("Регистрация прошла успешно! Добро пожаловать, " + userDto.getUsername() + "!");
-        mailSender.send(message);
+
+    private void sendRegistrationEmail(UserDto userDto) throws EmailSendingException {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(userDto.getEmail());
+            message.setSubject("Magic Menu");
+            message.setText("Регистрация прошла успешно! Добро пожаловать, " + userDto.getUsername() + "!");
+            mailSender.send(message);
+        } catch (MailException e) {
+            throw new EmailSendingException("Не удалось отправить письмо с подтверждением. Пожалуйста, попробуйте еще раз.", e);
+        }
     }
+
+
     @Override
     public UserDto getById(Long id) {
         User user = userRepo.findById(id)
@@ -79,38 +104,63 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return userMapper.toDtoList(users);
     }
 
-    public UserDto updateUser(UpdateUserDto updateUserDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUser = authentication.getName();
+    public UserDto updateUser(UpdateUserDto updateUserDto) throws UnauthorizedException, InvalidUserDataException {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getName() == null) {
+                log.error("Пользователь не найден по токену");
+                throw new UnauthorizedException("Пользователь не найден по токену");
+            }
 
-        if (currentUser == null) {
-            log.error("Пользователь не найден по токену");
-            throw new RuntimeException("Пользователь не найден по токену");
+            String currentUser = authentication.getName();
+            User user = userRepo.findByUsername(currentUser)
+                    .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+
+            user.setName(updateUserDto.getName());
+            user.setSurname(updateUserDto.getSurname());
+            user.setUsername(updateUserDto.getUsername());
+            user.setEmail(updateUserDto.getEmail());
+
+            userRepo.save(user);
+            return userMapper.toDto(user);
+        } catch (UsernameNotFoundException e) {
+            log.error("Пользователь не найден", e);
+            throw new ResourceNotFoundException("Пользователь не найден", e);
+        } catch (DataIntegrityViolationException e) {
+            log.error("Ошибка целостности данных при обновлении пользователя", e);
+            throw new InvalidUserDataException("Ошибка целостности данных при обновлении пользователя", e);
+        } catch (UnauthorizedException e) {
+            throw new UnauthorizedException(e.getMessage());
+        }catch (Exception e) {
+            log.error("Внутренняя ошибка сервера при обновлении пользователя", e);
+            throw new RuntimeException("Внутренняя ошибка сервера при обновлении пользователя", e);
         }
-
-        User user = userRepo.findByUsername(currentUser)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
-
-        user.setName(updateUserDto.getName());
-        user.setSurname(updateUserDto.getSurname());
-        user.setUsername(updateUserDto.getUsername());
-        user.setEmail(updateUserDto.getEmail());
-
-        userRepo.save(user);
-        return userMapper.toDto(user);
     }
+
 
     @Override
     public void generateResetToken(String email) {
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден с помощью электронной почты: " + email));
+        try {
+            User user = userRepo.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден с помощью электронной почты: " + email));
 
-        String token = UUID.randomUUID().toString();
-        user.setResetToken(token);
-        userRepo.save(user);
+            String token = UUID.randomUUID().toString();
+            user.setResetToken(token);
+            userRepo.save(user);
 
-        sendResetEmail(user.getEmail(), token);
+            sendResetEmail(user.getEmail(), token);
+        } catch (UsernameNotFoundException e) {
+            log.error("Пользователь не найден: {}", email, e);
+            throw new ResourceNotFoundException("Пользователь не найден с помощью электронной почты: " + email, e);
+        } catch (MailException e) {
+            log.error("Ошибка отправки почты на адрес: {}", email, e);
+            throw new EmailSendingException("Ошибка отправки почты на адрес: " + email, e);
+        } catch (RuntimeException e) {
+            log.error("Ошибка генерации токена сброса для пользователя: {}", email, e);
+            throw new RuntimeException("Ошибка генерации токена сброса для пользователя: " + email, e);
+        }
     }
+
 
     private void sendResetEmail(String email, String token) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -122,13 +172,22 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void resetPassword(String token, String newPassword) {
-        User user = userRepo.findByResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Недействительный или просроченный token."));
+        try {
+            User user = userRepo.findByResetToken(token)
+                    .orElseThrow(() -> new InvalidTokenException("Недействительный или просроченный token."));
 
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(encodedPassword);
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedPassword);
 
-        user.setResetToken(null);
-        userRepo.save(user);
+            user.setResetToken(null);
+            userRepo.save(user);
+        } catch (InvalidTokenException e) {
+            log.error("Ошибка при сбросе пароля: {}", e.getMessage());
+            throw e;
+        } catch (RuntimeException e) {
+            log.error("Внутренняя ошибка сервера при сбросе пароля", e);
+            throw new RuntimeException("Внутренняя ошибка сервера при сбросе пароля", e);
+        }
     }
+
 }

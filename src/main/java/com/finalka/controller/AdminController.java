@@ -2,6 +2,9 @@ package com.finalka.controller;
 
 import com.finalka.dto.CreateProductOfShopDto;
 import com.finalka.dto.MenuWithRecipeDTO;
+import com.finalka.exception.InvalidProductDataException;
+import com.finalka.exception.ProductAlreadyExistsException;
+import com.finalka.exception.ProductNotFoundException;
 import com.finalka.service.ProductOfShopService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -10,10 +13,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "MagicMenu", description = "Тут находятся все роуты для работы админа в магазине")
@@ -35,13 +38,9 @@ public class AdminController {
                     description = "Не найдено")
     })
     @PostMapping()
-    public ResponseEntity<String> saveProduct(@Valid @RequestBody CreateProductOfShopDto createProductOfShopDto){
-        try {
-            productOfShopService.createProduct(createProductOfShopDto);
-            return new ResponseEntity<>("Продукт успешно создана", HttpStatus.CREATED);
-        } catch (Exception e){
-            return new ResponseEntity<>("Не удалось создать продукт", HttpStatus.BAD_REQUEST);
-        }
+    public String saveProduct(@Validated @RequestBody CreateProductOfShopDto createProductOfShopDto) throws ProductAlreadyExistsException, InvalidProductDataException {
+        productOfShopService.createProduct(createProductOfShopDto);
+        return "Продукт успешно создан";
     }
     @Operation(summary = "Этот роут для обновления продукта в магазине")
     @ApiResponses(value = {
@@ -56,9 +55,9 @@ public class AdminController {
     })
 
     @PutMapping("/update/{productId}")
-    public ResponseEntity<CreateProductOfShopDto> updateProduct(@PathVariable Long productId, @RequestBody CreateProductOfShopDto productOfShopDto) {
+    public String updateProduct(@PathVariable Long productId, @RequestBody CreateProductOfShopDto productOfShopDto) throws InvalidProductDataException {
         CreateProductOfShopDto updatedProduct = productOfShopService.updateProduct(productId, productOfShopDto);
-        return ResponseEntity.ok(updatedProduct);
+        return "Продукт успешно обновлен: " + updatedProduct;
     }
 
     @Operation(summary = "Этот роут удаляет продукт в магазине по айди")
@@ -77,9 +76,11 @@ public class AdminController {
     public ResponseEntity<String> deleteProduct(@PathVariable Long productId) {
         try {
             productOfShopService.deleteProduct(productId);
-            return new ResponseEntity<>("Товар успешно удален", HttpStatus.OK);
+            return ResponseEntity.ok("Товар успешно удален");
+        } catch (ProductNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>("Не удалось удалить товар", HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось удалить продукт: " + e.getMessage());
         }
     }
 }

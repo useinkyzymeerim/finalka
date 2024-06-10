@@ -10,6 +10,8 @@ import com.finalka.entity.Products;
 import com.finalka.entity.Recipes;
 import com.finalka.entity.RecipesWithProducts;
 import com.finalka.enums.Units;
+import com.finalka.exception.MenuNotFoundException;
+import com.finalka.exception.MenuSaveException;
 import com.finalka.repo.MenuRepo;
 import com.finalka.repo.RecipesRepo;
 import com.finalka.repo.RecipesWithProductsRepo;
@@ -38,7 +40,10 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public CreateMenuDto save(CreateMenuDto menuDTO) {
         try {
-            MenuServiceImpl.log.info("START: MenuServiceImpl - save() {}", menuDTO);
+            log.info("START: MenuServiceImpl - save() {}", menuDTO);
+
+            validateMenuDto(menuDTO);
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
 
@@ -53,55 +58,88 @@ public class MenuServiceImpl implements MenuService {
             menuDTO.setCreatedAt(savedMenu.getCreatedAt());
             menuDTO.setCreatedBy(username);
 
-            MenuServiceImpl.log.info("END: MenuServiceImpl - save {} ", menuDTO);
+            log.info("END: MenuServiceImpl - save {} ", menuDTO);
             return menuDTO;
+        } catch (RuntimeException e) {
+            log.error("Ошибка при сохранении меню: {}", menuDTO, e);
+            throw new MenuSaveException("Ошибка при сохранении меню", e);
         } catch (Exception e) {
-            MenuServiceImpl.log.error("Failed to save menu", e);
-            throw new RuntimeException("Failed to save menu", e);
+            log.error("Произошла неизвестная ошибка при сохранении меню: {}", menuDTO, e);
+            throw new MenuSaveException("Произошла неизвестная ошибка при сохранении меню", e);
         }
     }
+
+    private void validateMenuDto(CreateMenuDto menuDTO) {
+        if (menuDTO.getNameOfMenu() == null || menuDTO.getNameOfMenu().isEmpty()) {
+            throw new MenuSaveException("Название меню не должно быть пустым");
+        }
+
+    }
+
 
     @Override
     public String delete(Long id) {
-        MenuServiceImpl.log.info("СТАРТ: MenuServiceImpl - delete(). Удалить запись с id {}", id);
-        Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(id);
-        if (menuOptional.isEmpty()) {
-            MenuServiceImpl.log.error("Меню с id " + id + " не найдена!");
-            throw new NullPointerException("Меню с id " + id + " не найдена!");
+        try {
+            log.info("СТАРТ: MenuServiceImpl - delete(). Удалить запись с id {}", id);
+
+            Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(id);
+            if (menuOptional.isEmpty()) {
+                log.error("Меню с id {} не найдено!", id);
+                throw new MenuNotFoundException("Меню с id " + id + " не найдено!");
+            }
+
+            Menu menu = menuOptional.get();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            menu.setDeletedBy(username);
+            menu.setDeletedAt(new Timestamp(System.currentTimeMillis()));
+            menuRepo.save(menu);
+
+            log.info("КОНЕЦ: MenuServiceImpl - delete(). Удалена запись с id {}", id);
+            return "Меню с id " + id + " было удалено!";
+        } catch (MenuNotFoundException e) {
+            log.error("Ошибка при удалении меню с id {}: {}", id, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Произошла неизвестная ошибка при удалении меню с id {}: {}", id, e);
+            throw new RuntimeException("Произошла неизвестная ошибка при удалении меню", e);
         }
-        Menu menu = menuOptional.get();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        menu.setDeletedBy(username);
-        menu.setDeletedAt(new Timestamp(System.currentTimeMillis()));
-        menuRepo.save(menu);
-        MenuServiceImpl.log.info("КОНЕЦ: MenuServiceImpl - delete(). Удаленна запись с id {}", id);
-        return "Меню с id " + id + " была удалена!";
     }
 
-@Override
-public MenuDTO findById(Long id) {
-    log.info("СТАРТ: MenuServiceImpl - findById({})", id);
-    Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(id);
-    if (menuOptional.isEmpty()) {
-        log.error("Меню с id " + id + " не найдена!");
-        throw new NullPointerException("Меню с id " + id + " не найдена!");
+
+    @Override
+    public MenuDTO findById(Long id) {
+        try {
+            log.info("СТАРТ: MenuServiceImpl - findById({})", id);
+            Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(id);
+            if (menuOptional.isEmpty()) {
+                log.error("Меню с id {} не найдено!", id);
+                throw new MenuNotFoundException("Меню с id " + id + " не найдено!");
+            }
+
+            Menu menu = menuOptional.get();
+            log.info("КОНЕЦ: MenuServiceImpl - findById(). Menu - {} ", menu);
+
+            return MenuDTO.builder()
+                    .id(menu.getId())
+                    .nameOfMenu(menu.getNameOfMenu())
+                    .createdBy(menu.getCreatedBy())
+                    .createdAt(menu.getCreatedAt())
+                    .lastUpdatedBy(menu.getLastUpdatedBy())
+                    .lastUpdatedAt(menu.getLastUpdatedAt())
+                    .deletedBy(menu.getDeletedBy())
+                    .deletedAt(menu.getDeletedAt())
+                    .build();
+        } catch (MenuNotFoundException e) {
+            log.error("Ошибка при поиске меню с id {}: {}", id, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Произошла неизвестная ошибка при поиске меню с id {}: {}", id, e);
+            throw new RuntimeException("Произошла неизвестная ошибка при поиске меню", e);
+        }
     }
-    Menu menu = menuOptional.get();
-    log.info("КОНЕЦ: MenuServiceImpl - findById(). Menu - {} ", menu);
-    return MenuDTO.builder()
-            .id(menu.getId())
-            .nameOfMenu(menu.getNameOfMenu())
-            .createdBy(menu.getCreatedBy())
-            .createdAt(menu.getCreatedAt())
-            .lastUpdatedBy(menu.getLastUpdatedBy())
-            .lastUpdatedAt(menu.getLastUpdatedAt())
-            .deletedBy(menu.getDeletedBy())
-            .deletedAt(menu.getDeletedAt())
-            .build();
-}
+
 
     @Override
     public List<MenuDTO> findAll() {
@@ -131,27 +169,43 @@ public MenuDTO findById(Long id) {
 
     @Transactional
     @Override
-    public Map<Products, Map.Entry<Integer, Units>> calculateRequiredProductsForMenu(Long id) {
-        List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByRecipe_Menus_Id(id);
+    public List<Map<String, Object>> calculateRequiredProductsForMenu(Long id) {
+        try {
+            List<RecipesWithProducts> recipesWithProductsList = recipesWithProductsRepo.findByRecipe_Menus_Id(id);
 
-        Map<Products, Map.Entry<Integer, Units>> productQuantityMap = new HashMap<>();
+            Map<Products, Map.Entry<Integer, Units>> productQuantityMap = new HashMap<>();
 
-        for (RecipesWithProducts recipesWithProducts : recipesWithProductsList) {
-            Products product = recipesWithProducts.getProduct();
-            int quantity = recipesWithProducts.getQuantityOfProduct();
-            Units unit = product.getUnitsEnum();
+            for (RecipesWithProducts recipesWithProducts : recipesWithProductsList) {
+                Products product = recipesWithProducts.getProduct();
+                int quantity = recipesWithProducts.getQuantityOfProduct();
+                Units unit = product.getUnitsEnum();
 
-            if (productQuantityMap.containsKey(product)) {
-                Map.Entry<Integer, Units> entry = productQuantityMap.get(product);
-                int totalQuantity = entry.getKey() + quantity;
-                productQuantityMap.put(product, new AbstractMap.SimpleEntry<>(totalQuantity, unit));
-            } else {
-                productQuantityMap.put(product, new AbstractMap.SimpleEntry<>(quantity, unit));
+                if (productQuantityMap.containsKey(product)) {
+                    Map.Entry<Integer, Units> entry = productQuantityMap.get(product);
+                    int totalQuantity = entry.getKey() + quantity;
+                    productQuantityMap.put(product, new AbstractMap.SimpleEntry<>(totalQuantity, unit));
+                } else {
+                    productQuantityMap.put(product, new AbstractMap.SimpleEntry<>(quantity, unit));
+                }
             }
-        }
 
-        return productQuantityMap;
+            List<Map<String, Object>> productQuantityList = new ArrayList<>();
+            for (Map.Entry<Products, Map.Entry<Integer, Units>> entry : productQuantityMap.entrySet()) {
+                Map<String, Object> productInfo = new HashMap<>();
+                productInfo.put("productName", entry.getKey().getProductName());
+                productInfo.put("quantity", entry.getValue().getKey());
+                productInfo.put("unit", entry.getValue().getValue().toString());
+                productQuantityList.add(productInfo);
+            }
+
+            return productQuantityList;
+
+        } catch (Exception e) {
+            log.error("Не удалось рассчитать необходимые продукты для меню с идентификатором: {}", id, e);
+            throw new RuntimeException("Не удалось рассчитать продукты ", e);
+        }
     }
+
 
     @Override
     public List<MenuWithRecipeDTO> getMenuWithRecipes(Long menuId) {
@@ -179,49 +233,67 @@ public MenuDTO findById(Long id) {
 
     @Transactional
     public List<RecipesDto> getRecipesByMenuId(Long menuId) {
-        Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(menuId);
-        if (menuOptional.isEmpty()) {
-            throw new RuntimeException("Меню не найдено или удалено");
+        try {
+            Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(menuId);
+            if (menuOptional.isEmpty()) {
+                throw new MenuNotFoundException("Меню не найдено или удалено");
+            }
+            Menu menu = menuOptional.get();
+            return menu.getRecipes().stream()
+                    .map(recipe -> RecipesDto.builder()
+                            .nameOfFood(recipe.getNameOfFood())
+                            .imageBase64(recipe.getImageBase64())
+                            .build())
+                    .collect(Collectors.toList());
+        } catch (MenuNotFoundException e) {
+            log.error("Меню не найдено или удалено: {}", menuId, e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Произошла неизвестная ошибка при получении рецептов по ID меню: {}", menuId, e);
+            throw new RuntimeException("Произошла неизвестная ошибка при получении рецептов", e);
         }
-        Menu menu = menuOptional.get();
-        return menu.getRecipes().stream()
-                .map(recipe -> RecipesDto.builder()
-                        .nameOfFood(recipe.getNameOfFood())
-                        .imageBase64(recipe.getImageBase64())
-                        .build())
-                .collect(Collectors.toList());
     }
+
 
     @Override
     public MenuDTO update(MenuDTO menuDTO) {
-        log.info("СТАРТ: MenuServiceImpl - update({})", menuDTO);
-        Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(menuDTO.getId());
-        if (menuOptional.isEmpty()) {
-            log.error("Меню с id " + menuDTO.getId() + " не найдена!");
-            throw new NullPointerException("Меню с id " + menuDTO.getId() + " не найдена!");
+        try {
+            log.info("СТАРТ: MenuServiceImpl - update({})", menuDTO);
+            Optional<Menu> menuOptional = menuRepo.findByDeletedAtIsNullAndId(menuDTO.getId());
+            if (menuOptional.isEmpty()) {
+                log.error("Меню с id {} не найдено!", menuDTO.getId());
+                throw new MenuNotFoundException("Меню с id " + menuDTO.getId() + " не найдено!");
+            }
+            Menu menu = menuOptional.get();
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            Menu updatedMenu = Menu.builder()
+                    .id(menuDTO.getId())
+                    .nameOfMenu(menuDTO.getNameOfMenu())
+                    .createdBy(menu.getCreatedBy())
+                    .createdAt(menu.getCreatedAt())
+                    .lastUpdatedBy(username)
+                    .lastUpdatedAt(new Timestamp(System.currentTimeMillis()))
+                    .build();
+
+            menuRepo.save(updatedMenu);
+
+            menuDTO.setCreatedBy(menu.getCreatedBy());
+            menuDTO.setCreatedAt(menu.getCreatedAt());
+            menuDTO.setLastUpdatedBy(username);
+            menuDTO.setLastUpdatedAt(updatedMenu.getLastUpdatedAt());
+
+            log.info("КОНЕЦ: MenuServiceImpl - update(). Обновленная запись - {}", menuDTO);
+            return menuDTO;
+        } catch (MenuNotFoundException e) {
+            log.error("Ошибка при обновлении меню с id {}: {}", menuDTO.getId(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Произошла неизвестная ошибка при обновлении меню с id {}: {}", menuDTO.getId(), e);
+            throw new RuntimeException("Произошла неизвестная ошибка при обновлении меню", e);
         }
-        Menu menu = menuOptional.get();
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        Menu updatedMenu = Menu.builder()
-                .id(menuDTO.getId())
-                .nameOfMenu(menuDTO.getNameOfMenu())
-                .createdBy(menu.getCreatedBy())
-                .createdAt(menu.getCreatedAt())
-                .lastUpdatedBy(username)
-                .lastUpdatedAt(new Timestamp(System.currentTimeMillis()))
-                .build();
-
-        menuRepo.save(updatedMenu);
-
-        menuDTO.setCreatedBy(menu.getCreatedBy());
-        menuDTO.setCreatedAt(menu.getCreatedAt());
-        menuDTO.setLastUpdatedBy(username);
-        menuDTO.setLastUpdatedAt(updatedMenu.getLastUpdatedAt());
-
-        log.info("КОНЕЦ: MenuServiceImpl - update(). Обновленная запись - {}", menuDTO);
-        return menuDTO;
     }
+
 }

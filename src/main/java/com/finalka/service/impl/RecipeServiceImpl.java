@@ -4,18 +4,18 @@ package com.finalka.service.impl;
 import com.finalka.dto.*;
 import com.finalka.entity.*;
 import com.finalka.enums.Units;
-import com.finalka.filter.CustomAuthenticationFilter;
+import com.finalka.exception.*;
 import com.finalka.repo.*;
 import com.finalka.service.RecipesService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,10 +35,10 @@ public class RecipeServiceImpl implements RecipesService {
             log.info("START: RecipeServiceImpl - getRecipeWithProductsById() {}", recipeId);
 
             Recipes recipe = recipesRepo.findById(recipeId)
-                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден или удалён"));
+                    .orElseThrow(() -> new RecipeNotFoundException("Рецепт с указанным ID не найден или удалён"));
 
             if (recipe.getDeletedAt() != null) {
-                throw new RuntimeException("Рецепт с указанным ID был удалён");
+                throw new RecipeDeletedException("Рецепт с указанным ID был удалён");
             }
 
             List<RecipesWithProducts> recipeProducts = recipesWithProductsRepo.findByRecipe(recipe);
@@ -62,26 +62,56 @@ public class RecipeServiceImpl implements RecipesService {
             log.info("END: RecipeServiceImpl - getRecipeWithProductsById {}", recipeId);
 
             return recipeDetailsDTO;
+        } catch (RecipeNotFoundException | RecipeDeletedException e) {
+            log.error(e.getMessage(), e);
+            throw e;
         } catch (Exception e) {
             log.error("Не удалось получить рецепт с продуктами", e);
-            throw new RuntimeException("Не удалось получить рецепт с продуктами", e);
+            throw new RecipeServiceException("Не удалось получить рецепт с продуктами", e);
         }
     }
+
 
     @Transactional
     @Override
-    public List<RecipeWithProductDTO> findRecipesByProducts(List<String> userProducts) {
-        List<String> lowerCaseProducts = userProducts.stream()
-                .map(String::toLowerCase)
-                .toList();
+    public List<RecipeWithProductDTO> findRecipesByProducts(String products) {
+        try {
+            if (products == null || products.isEmpty()) {
+                throw new IllegalArgumentException("Строка продуктов не должна быть пустой");
+            }
 
-        List<Recipes> recipes = new ArrayList<>();
-        for (String product : lowerCaseProducts) {
-            recipes.addAll(recipesRepo.findByProductNameContainingIgnoreCase(product));
+            List<String> userProducts = Arrays.asList(products.split("\\s+"));
+
+            if (userProducts.isEmpty()) {
+                throw new IllegalArgumentException("Список продуктов не должен быть пустым");
+            }
+
+            List<String> lowerCaseProducts = userProducts.stream()
+                    .map(String::toLowerCase)
+                    .toList();
+
+            List<Recipes> recipes = new ArrayList<>();
+            for (String product : lowerCaseProducts) {
+                recipes.addAll(recipesRepo.findByProductNameContainingIgnoreCaseAndDeletedAtIsNull(product));
+            }
+
+            return mapToRecipeDTOList(recipes);
+        } catch (NullPointerException e) {
+            log.error("Переданные продукты или результаты поиска содержат null", e);
+            throw new RuntimeException("Произошла ошибка при обработке данных: null", e);
+        } catch (IllegalArgumentException e) {
+            log.error("Недопустимые аргументы: {}", products, e);
+            throw new RuntimeException("Недопустимые аргументы: " + e.getMessage(), e);
+        } catch (DataAccessException e) {
+            log.error("Ошибка доступа к данным при поиске рецептов", e);
+            throw new RuntimeException("Ошибка доступа к данным", e);
+        } catch (Exception e) {
+            log.error("Произошла непредвиденная ошибка при поиске рецептов", e);
+            throw new RuntimeException("Произошла непредвиденная ошибка", e);
         }
-
-        return mapToRecipeDTOList(recipes);
     }
+
+
 
     private List<RecipeWithProductDTO> mapToRecipeDTOList(List<Recipes> recipes) {
         return recipes.stream()
@@ -205,20 +235,16 @@ public class RecipeServiceImpl implements RecipesService {
     @Transactional
     @Override
     public String delete(Long id) {
-        log.info("СТАРТ: RecipeServiceImpl - delete(). Удалить запись с id {}", id);
+        log.info("СТАРТ: RecipeServiceImpl - delete(). Удаление записи с id {}", id);
         Optional<Recipes> recipesOptional = recipesRepo.findByDeletedAtIsNullAndId(id);
         Recipes recipes = recipesOptional.orElseThrow(() -> {
-            log.error("Рецепт с id " + id + " не найден!");
-            return new NullPointerException("Рецепт с id " + id + " не найден!");
+            log.error("Рецепт с id {} не найден!", id);
+            return new RecipeNotFoundException("Рецепт с id " + id + " не найден!");
         });
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        if (recipes == null) {
-            log.error("Рецепт с id " + id + " не найден!");
-            throw new NullPointerException("Рецепт с id " + id + " не найден!");
-        }
         if (!recipes.getCreatedBy().equals(username)) {
             log.error("Пользователь {} не имеет прав на удаление рецепта с id {}", username, id);
             throw new SecurityException("Вы не имеете прав на удаление этого рецепта");
@@ -228,10 +254,10 @@ public class RecipeServiceImpl implements RecipesService {
         recipes.setDeletedAt(new Timestamp(System.currentTimeMillis()));
         recipesRepo.save(recipes);
 
-        log.info("КОНЕЦ: RecipeServiceImpl - delete(). Удалена запись с id {}", id);
+        log.info("КОНЕЦ: RecipeServiceImpl - delete(). Запись с id {} удалена", id);
         return "Рецепт с id " + id + " был удален!";
-
     }
+
 
     @Override
     public RecipesDto findById(Long id) {
@@ -262,26 +288,37 @@ public class RecipeServiceImpl implements RecipesService {
     @Override
     public List<RecipesDto> findAll() {
         log.info("СТАРТ: RecipeServiceImpl - findAll()");
-        List<Recipes> recipesList = recipesRepo.findAllByDeletedAtIsNull();
+        try {
+            List<Recipes> recipesList = recipesRepo.findAllByDeletedAtIsNull();
+            if (recipesList.isEmpty()) {
+                throw new RecipeNotFoundException("Рецепты не найдены");
+            }
 
-        List<RecipesDto> recipesDtos = new ArrayList<>();
-        for (Recipes recipes : recipesList) {
-            RecipesDto recipesDto = RecipesDto.builder()
-                    .Id(recipes.getId())
-                    .nameOfFood(recipes.getNameOfFood())
-                    .imageBase64(recipes.getImageBase64())
-                    .createdBy(recipes.getCreatedBy())
-                    .createdAt(recipes.getCreatedAt())
-                    .lastUpdatedBy(recipes.getLastUpdatedBy())
-                    .lastUpdatedAt(recipes.getLastUpdatedAt())
-                    .deletedBy(recipes.getDeletedBy())
-                    .deletedAt(recipes.getDeletedAt())
-                    .build();
-            recipesDtos.add(recipesDto);
+            List<RecipesDto> recipesDtos = recipesList.stream()
+                    .map(recipe -> RecipesDto.builder()
+                            .Id(recipe.getId())
+                            .nameOfFood(recipe.getNameOfFood())
+                            .imageBase64(recipe.getImageBase64())
+                            .createdBy(recipe.getCreatedBy())
+                            .createdAt(recipe.getCreatedAt())
+                            .lastUpdatedBy(recipe.getLastUpdatedBy())
+                            .lastUpdatedAt(recipe.getLastUpdatedAt())
+                            .deletedBy(recipe.getDeletedBy())
+                            .deletedAt(recipe.getDeletedAt())
+                            .build())
+                    .collect(Collectors.toList());
+
+            log.info("КОНЕЦ: RecipeServiceImpl - findAll()");
+            return recipesDtos;
+        } catch (RecipeNotFoundException e) {
+            log.error("RecipeNotFoundException: ", e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Exception: ", e);
+            throw new RuntimeException("Ошибка при получении рецептов", e);
         }
-        log.info("КОНЕЦ: RecipeServiceImpl - findAll()");
-        return recipesDtos;
     }
+
 
 
     @Transactional
@@ -289,60 +326,94 @@ public class RecipeServiceImpl implements RecipesService {
     public List<RecipesDto> findAllByChef(String token) {
         log.info("СТАРТ: RecipeServiceImpl - findAllByChefFromToken()");
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUser = authentication.getName();
-        if (currentUser == null) {
-            log.error("Пользователь не найден по токену: {}", token);
-            throw new RuntimeException("Пользователь не найден по токену");
+        try {
+            if (token == null || !token.startsWith("Bearer ")) {
+                log.error("Неверный формат токена: {}", token);
+                throw new IllegalArgumentException("Неверный формат токена");
+            }
+
+            String authToken = token.substring(7);
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentUser = authentication.getName();
+
+            if (currentUser == null) {
+                log.error("Пользователь не найден по токену: {}", authToken);
+                throw new RuntimeException("Пользователь не найден по токену");
+            }
+
+            List<Recipes> recipesList = recipesRepo.findByCreatedByAndDeletedAtIsNull(currentUser);
+            List<RecipesDto> recipesDtos = new ArrayList<>();
+
+            for (Recipes recipes : recipesList) {
+                RecipesDto recipesDto = RecipesDto.builder()
+                        .Id(recipes.getId())
+                        .nameOfFood(recipes.getNameOfFood())
+                        .imageBase64(recipes.getImageBase64())
+                        .createdBy(recipes.getCreatedBy())
+                        .createdAt(recipes.getCreatedAt())
+                        .lastUpdatedBy(recipes.getLastUpdatedBy())
+                        .lastUpdatedAt(recipes.getLastUpdatedAt())
+                        .deletedBy(recipes.getDeletedBy())
+                        .deletedAt(recipes.getDeletedAt())
+                        .build();
+                recipesDtos.add(recipesDto);
+            }
+
+            log.info("КОНЕЦ: RecipeServiceImpl - findAllByChefFromToken()");
+            return recipesDtos;
+        } catch (IllegalArgumentException e) {
+            log.error("Ошибка аргумента: {}", e.getMessage());
+            throw e;
+        } catch (RuntimeException e) {
+            log.error("Произошла ошибка: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Произошла неожиданная ошибка: {}", e.getMessage());
+            throw new RuntimeException("Произошла неожиданная ошибка", e);
         }
-
-        List<Recipes> recipesList = recipesRepo.findByCreatedByAndDeletedAtIsNull(currentUser);
-        List<RecipesDto> recipesDtos = new ArrayList<>();
-
-        for (Recipes recipes : recipesList) {
-            RecipesDto recipesDto = RecipesDto.builder()
-                    .Id(recipes.getId())
-                    .nameOfFood(recipes.getNameOfFood())
-                    .imageBase64(recipes.getImageBase64())
-                    .createdBy(recipes.getCreatedBy())
-                    .createdAt(recipes.getCreatedAt())
-                    .lastUpdatedBy(recipes.getLastUpdatedBy())
-                    .lastUpdatedAt(recipes.getLastUpdatedAt())
-                    .deletedBy(recipes.getDeletedBy())
-                    .deletedAt(recipes.getDeletedAt())
-                    .build();
-            recipesDtos.add(recipesDto);
-        }
-
-        log.info("КОНЕЦ: RecipeServiceImpl - findAllByChefFromToken()");
-        return recipesDtos;
     }
 
 
     @Transactional
     @Override
-    public void addRecipeToMenu(Long menuId, Long recipeId) {
-        log.info("START: RecipeServiceImpl - addRecipeToMenu(). Adding recipe {} to menu {}", recipeId, menuId);
-        Menu menu = menuRepo.findById(menuId).orElseThrow(() -> new RuntimeException("Menu not found"));
-        Recipes recipe = recipesRepo.findById(recipeId).orElseThrow(() -> new RuntimeException("Recipe not found"));
+    public String addRecipeToMenu(RecipeAddProductDto menuRecipeRequestDto) {
+        try {
+            Long menuId = menuRecipeRequestDto.getMenuId();
+            Long recipeId = menuRecipeRequestDto.getRecipeId();
 
-        menu.getRecipes().add(recipe);
-        menuRepo.save(menu);
+            log.info("START: RecipeServiceImpl - addRecipeToMenu(). Adding recipe {} to menu {}", recipeId, menuId);
+            Menu menu = menuRepo.findById(menuId).orElseThrow(() -> new MenuNotFoundException("Меню не найдено"));
+            Recipes recipe = recipesRepo.findById(recipeId).orElseThrow(() -> new RecipeNotFoundException("Рецепт не найден"));
 
-        log.info("END: RecipeServiceImpl - addRecipeToMenu(). Added recipe {} to menu {}", recipeId, menuId);
+            menu.getRecipes().add(recipe);
+            menuRepo.save(menu);
+
+            log.info("END: RecipeServiceImpl - addRecipeToMenu(). Added recipe {} to menu {}", recipeId, menuId);
+
+            return "Рецепт успешно добавлен в меню";
+        } catch (MenuNotFoundException | RecipeNotFoundException e) {
+            log.error("Ошибка при добавлении рецепта в меню", e);
+            throw new RuntimeException(e.getMessage());
+        } catch (DataAccessException e) {
+            log.error("Ошибка доступа к базе данных", e);
+            throw new RuntimeException("Ошибка доступа к базе данных", e);
+        } catch (Exception e) {
+            log.error("Произошла ошибка при добавлении рецепта в меню", e);
+            throw new RuntimeException("Произошла ошибка при добавлении рецепта в меню", e);
+        }
     }
 
     @Transactional
-    @Override
     public RecipeUpdateDTO updateRecipe(RecipeUpdateDTO recipeUpdateDTO) {
         try {
             log.info("START: RecipeServiceImpl - updateRecipe() {}", recipeUpdateDTO);
 
             Recipes recipe = recipesRepo.findById(recipeUpdateDTO.getId())
-                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден"));
+                    .orElseThrow(() -> new RecipeNotFoundException("Рецепт с указанным ID не найден"));
 
             if (recipe.getDeletedAt() != null) {
-                throw new RuntimeException("Рецепт с указанным ID был удалён");
+                throw new RecipeDeletedException("Рецепт с указанным ID был удалён");
             }
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -362,14 +433,10 @@ public class RecipeServiceImpl implements RecipesService {
                 boolean isNewProduct = false;
 
                 List<Products> productsList = productRepo.findByProductName(productUpdateDTO.getProductName());
-                Products existingProduct = null;
-
-                for (Products product : productsList) {
-                    if (product.getDeletedAt() == null) {
-                        existingProduct = product;
-                        break;
-                    }
-                }
+                Products existingProduct = productsList.stream()
+                        .filter(product -> product.getDeletedAt() == null)
+                        .findFirst()
+                        .orElse(null);
 
                 if (existingProduct == null) {
                     Products newProduct = new Products();
@@ -396,7 +463,7 @@ public class RecipeServiceImpl implements RecipesService {
                     productRepo.save(existingProduct);
 
                     RecipesWithProducts recipesWithProducts = recipesWithProductsRepo.findByRecipeAndProduct(recipe, existingProduct)
-                            .orElseThrow(() -> new RuntimeException("Связь между рецептом и продуктом не найдена"));
+                            .orElseThrow(() -> new ProductNotFoundException("Связь между рецептом и продуктом не найдена"));
 
                     recipesWithProducts.setQuantityOfProduct(productUpdateDTO.getQuantity());
                     recipesWithProducts.setUnitsEnum(productUpdateDTO.getUnitsEnum());
@@ -415,6 +482,8 @@ public class RecipeServiceImpl implements RecipesService {
             log.info("END: RecipeServiceImpl - updateRecipe() {}", recipeUpdateDTO);
             return recipeUpdateDTO;
 
+        } catch (RecipeNotFoundException | RecipeDeletedException | ProductNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Не удалось обновить рецепт с продуктами", e);
             throw new RuntimeException("Не удалось обновить рецепт с продуктами", e);
@@ -428,30 +497,39 @@ public class RecipeServiceImpl implements RecipesService {
             log.info("START: RecipeServiceImpl - removeProductFromRecipe() recipeId: {}, productId: {}", recipeId, productId);
 
             Recipes recipe = recipesRepo.findById(recipeId)
-                    .orElseThrow(() -> new RuntimeException("Рецепт с указанным ID не найден"));
+                    .orElseThrow(() -> new RecipeNotFoundException("Рецепт с указанным ID не найден"));
 
             if (recipe.getDeletedAt() != null) {
-                throw new RuntimeException("Рецепт с указанным ID был удалён");
+                throw new RecipeDeletedException("Рецепт с указанным ID был удалён");
             }
 
             Products product = productRepo.findById(productId)
-                    .orElseThrow(() -> new RuntimeException("Продукт с указанным ID не найден"));
+                    .orElseThrow(() -> new ProductNotFoundException("Продукт с указанным ID не найден"));
 
             if (product.getDeletedAt() != null) {
-                throw new RuntimeException("Продукт с указанным ID был удалён");
+                throw new ProductDeletedException("Продукт с указанным ID был удалён");
             }
 
             RecipesWithProducts recipesWithProducts = recipesWithProductsRepo.findByRecipeAndProduct(recipe, product)
-                    .orElseThrow(() -> new RuntimeException("Связь между рецептом и продуктом не найдена"));
+                    .orElseThrow(() -> new RecipeProductLinkNotFoundException("Связь между рецептом и продуктом не найдена"));
 
             recipesWithProductsRepo.delete(recipesWithProducts);
 
             log.info("END: RecipeServiceImpl - removeProductFromRecipe() recipeId: {}, productId: {}", recipeId, productId);
 
+        } catch (RecipeNotFoundException | ProductNotFoundException e) {
+            throw e;
+        } catch (RecipeDeletedException | ProductDeletedException e) {
+            throw e;
+        } catch (RecipeProductLinkNotFoundException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw new RecipeProductLinkRemovalException("Не удалось удалить связь продукта с рецептом", e);
         } catch (Exception e) {
             log.error("Не удалось удалить связь продукта с рецептом", e);
-            throw new RuntimeException("Не удалось удалить связь продукта с рецептом", e);
+            throw new RecipeProductLinkRemovalException("Не удалось удалить связь продукта с рецептом", e);
         }
     }
+
 }
 
