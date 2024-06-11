@@ -20,14 +20,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "MagicMenu", description = "Тут находятся все общие роуты для не авторизованных пользователей")
+@Tag(name = "Public API", description = "Тут находятся все общие роуты для не авторизованных пользователей")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/all")
 public class PermitAllController {
 
     private final UserServiceImpl service;
-    private final UserRepo repo;
     @Operation(summary = "Этот роут для регистрации ")
     @ApiResponses(value = {
             @ApiResponse(
