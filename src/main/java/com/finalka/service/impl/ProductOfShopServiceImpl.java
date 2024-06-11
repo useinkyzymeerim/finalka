@@ -110,14 +110,19 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     }
 
     @Transactional(readOnly = true)
-    public ProductOfShopDto getProductByName(String productName) {
+    public List<ProductOfShopDto> getProductsByName(String productName) {
         try {
-            ProductOfShop product = productOfShopRepo.findByProductNameIgnoreCaseContainingAndDeletedFalse(productName)
-                    .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+            List<ProductOfShop> products = productOfShopRepo.findByProductNameIgnoreCaseContainingAndDeletedFalse(productName);
 
-            return modelMapper.map(product, ProductOfShopDto.class);
+            if (products.isEmpty()) {
+                throw new IllegalArgumentException("Продукты не найдены");
+            }
+
+            return products.stream()
+                    .map(product -> modelMapper.map(product, ProductOfShopDto.class))
+                    .collect(Collectors.toList());
         } catch (IllegalArgumentException ex) {
-            throw new ServiceException("Ошибка при получении продукта по имени", ex);
+            throw new ServiceException("Ошибка при получении продуктов по имени", ex);
         }
     }
 
