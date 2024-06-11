@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import static org.hibernate.query.sqm.tree.SqmNode.log;
-@Tag(name = "MagicMenu", description = "Тут находятся все роуты для поваров")
+@Tag(name = "Chef API", description = "Тут находятся все роуты для поваров")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chefs")

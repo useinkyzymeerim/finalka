@@ -21,7 +21,8 @@ import java.util.List;
 
 import static org.hibernate.query.sqm.tree.SqmNode.log;
 
-@Tag(name = "MagicMenu", description = "Тут находятся все общие роуты для авторизованных пользователей")
+@Tag(name = "Authorized API", description = "Тут находятся все общие роуты для авторизованных пользователей")
+@ApiResponses()
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/comminis")

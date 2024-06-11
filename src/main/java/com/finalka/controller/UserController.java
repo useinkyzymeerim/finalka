@@ -26,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "MagicMenu", description = "Тут находятся все роуты для пользователей")
+@Tag(name = "User API", description = "Тут находятся все роуты для пользователей")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")

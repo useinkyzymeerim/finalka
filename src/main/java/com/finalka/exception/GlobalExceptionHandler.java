@@ -31,6 +31,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleInvalidProductDataException(InvalidProductDataException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
+    @ExceptionHandler(MenuNotFoundException.class)
+    public ResponseEntity<String> handleInvalidProductDataMenuNotFoundException(MenuNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
 
 
     @ExceptionHandler(ProductAlreadyExistsException.class)

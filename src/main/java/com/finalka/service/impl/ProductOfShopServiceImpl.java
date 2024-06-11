@@ -109,7 +109,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
         return modelMapper.map(product, ProductOfShopDto.class);
     }
 
-    @Transactional(readOnly = true)
+
     public List<ProductOfShopDto> getProductsByName(String productName) {
         try {
             List<ProductOfShop> products = productOfShopRepo.findByProductNameIgnoreCaseContainingAndDeletedFalse(productName);

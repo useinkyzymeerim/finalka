@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "MagicMenu", description = "Тут находятся все роуты для работы админа в магазине")
+@Tag(name = "Admin API", description = "Тут находятся все роуты для работы админа в магазине")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/admins")
