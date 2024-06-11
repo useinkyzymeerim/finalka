@@ -111,20 +111,17 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
 
 
     public List<ProductOfShopDto> getProductsByName(String productName) {
-        try {
-            List<ProductOfShop> products = productOfShopRepo.findByProductNameIgnoreCaseContainingAndDeletedFalse(productName);
+        List<ProductOfShop> products = productOfShopRepo.findByProductNameIgnoreCaseContainingAndDeletedFalse(productName);
 
-            if (products.isEmpty()) {
-                throw new IllegalArgumentException("Продукты не найдены");
-            }
-
-            return products.stream()
-                    .map(product -> modelMapper.map(product, ProductOfShopDto.class))
-                    .collect(Collectors.toList());
-        } catch (IllegalArgumentException ex) {
-            throw new ServiceException("Ошибка при получении продуктов по имени", ex);
+        if (products.isEmpty()) {
+            return Collections.emptyList();
         }
+
+        return products.stream()
+                .map(product -> modelMapper.map(product, ProductOfShopDto.class))
+                .collect(Collectors.toList());
     }
+
 
 
     public List<ProductOfShopDto> getAllProducts() {

@@ -16,7 +16,10 @@ public interface ProductOfShopRepo extends JpaRepository<ProductOfShop, Long> {
       List<ProductOfShop> findByType(String type);
 
     List<ProductOfShop> findByInStockAndDeletedFalse(boolean inStock);
-    List<ProductOfShop> findByProductNameIgnoreCaseContainingAndDeletedFalse(String productName);
+    @Query("SELECT p FROM ProductOfShop p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :productName, '%')) AND p.deleted = false")
+    List<ProductOfShop> findByProductNameIgnoreCaseContainingAndDeletedFalse(@Param("productName") String productName);
+
+
 
     boolean existsByProductName(String productName);
 }
