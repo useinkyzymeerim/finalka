@@ -366,9 +366,9 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @GetMapping("/findByName")
-    public ResponseEntity<ProductOfShopDto> getProductByName(@RequestParam String productName) {
-        ProductOfShopDto productDto = productOfShopService.getProductByName(productName);
-        return ResponseEntity.ok(productDto);
+    public ResponseEntity<List<ProductOfShopDto>> getProductsByName(@RequestParam String productName) {
+        List<ProductOfShopDto> productDtos = productOfShopService.getProductsByName(productName);
+        return ResponseEntity.ok(productDtos);
     }
 
 

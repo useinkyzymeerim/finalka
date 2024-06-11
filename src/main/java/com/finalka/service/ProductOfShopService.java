@@ -17,6 +17,6 @@ public interface ProductOfShopService {
     void decreaseProductQuantityInStock(Long productId, int quantity);
     List<ProductOfShopDto> filterProductsByType(String type);
     List<ProductOfShopDto> filterProductsByAvailability(boolean inStock);
-    ProductOfShopDto getProductByName(String productName);
+    List<ProductOfShopDto> getProductsByName(String productName);
 
 }
