@@ -16,7 +16,8 @@ import java.util.Optional;
 public interface RecipesRepo extends JpaRepository<Recipes,Long> {
     List<Recipes> findAllByDeletedAtIsNull();
     Optional<Recipes> findByDeletedAtIsNullAndId(Long id);
-    @Query("SELECT r FROM Recipes r JOIN r.recipesWithProducts rp JOIN rp.product p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :productName, '%')) " +
+    @Query("SELECT r FROM Recipes r JOIN r.recipesWithProducts rp JOIN rp.product p " +
+            "WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :productName, '%')) " +
             "AND (r.deletedAt IS NULL OR r.deletedAt > CURRENT_TIMESTAMP)")
     List<Recipes> findByProductNameContainingIgnoreCaseAndDeletedAtIsNull(@Param("productName") String productName);
     List<Recipes> findByCreatedByAndDeletedAtIsNull(String username);
