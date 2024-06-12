@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @Tag(name = "Admin API", description = "Тут находятся все роуты для работы админа в магазине")
 @RequiredArgsConstructor
@@ -38,10 +39,14 @@ public class AdminController {
                     description = "Не найдено")
     })
     @PostMapping()
-    public String saveProduct(@Validated @RequestBody CreateProductOfShopDto createProductOfShopDto) throws ProductAlreadyExistsException, InvalidProductDataException {
-        productOfShopService.createProduct(createProductOfShopDto);
-        return "Продукт успешно создан";
+    public Long saveProduct(@Validated @RequestBody CreateProductOfShopDto createProductOfShopDto) {
+        try {
+            return productOfShopService.createProduct(createProductOfShopDto);
+        } catch (ProductAlreadyExistsException | InvalidProductDataException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
+
     @Operation(summary = "Этот роут для обновления продукта в магазине")
     @ApiResponses(value = {
             @ApiResponse(

@@ -150,7 +150,7 @@ public class RecipeServiceImpl implements RecipesService {
 
     @Transactional
     @Override
-    public void createRecipeWithProducts(RecipeWithProductDTO recipeDTO) {
+    public Long createRecipeWithProducts(RecipeWithProductDTO recipeDTO) throws RecipeCreationException {
         try {
             log.info("START: RecipeServiceImpl - createRecipeWithProducts() {}", recipeDTO);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -199,9 +199,10 @@ public class RecipeServiceImpl implements RecipesService {
                 }
             }
             log.info("END: RecipeServiceImpl - createRecipeWithProducts {}", recipeDTO);
+            return recipeId;
         } catch (Exception e) {
             log.error("Не удалось создать рецепт с продуктом", e);
-            throw new RuntimeException("Не удалось создать рецепт с продуктом", e);
+            throw new RecipeCreationException("Не удалось создать рецепт с продуктом");
         }
     }
 

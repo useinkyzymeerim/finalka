@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -41,14 +42,13 @@ public class ChefController {
     })
     @Operation(summary = "Роут для создание рецепта")
     @PostMapping
-    public ResponseEntity<?> createRecipeWithProducts(@Valid @RequestBody RecipeWithProductDTO recipeDto) {
+    public Long createRecipeWithProducts(@Valid @RequestBody RecipeWithProductDTO recipeDto) {
         try {
-            recipeService.createRecipeWithProducts(recipeDto);
-            return new ResponseEntity<>("Рецепт успешно создан", HttpStatus.CREATED);
+            return recipeService.createRecipeWithProducts(recipeDto);
         } catch (RecipeCreationException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
     @ApiResponses(value = {

@@ -9,7 +9,7 @@ import com.finalka.exception.ProductNotFoundException;
 import java.util.List;
 
 public interface ProductOfShopService {
-    void createProduct(CreateProductOfShopDto createProductOfShopDto) throws InvalidProductDataException, ProductAlreadyExistsException;
+    Long createProduct(CreateProductOfShopDto createProductOfShopDto) throws InvalidProductDataException, ProductAlreadyExistsException;
     CreateProductOfShopDto updateProduct(Long productId, CreateProductOfShopDto productDTO) throws InvalidProductDataException;
     void deleteProduct(Long productId) throws ProductNotFoundException;
     ProductOfShopDto getProduct(Long productId);

@@ -57,25 +57,7 @@ public class UserController {
         return recipeDetailsDTO;
     }
 
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Рецепт найден",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = RecipesDto.class))}),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Рецепт не найден")
-    })
-    @Operation(summary = "Роут для поиска рецепт по id")
-    @GetMapping("/{id}")
-    public RecipesDto findById(@PathVariable Long id) {
-        try {
-            return recipeService.findById(id);
-        } catch (NullPointerException nullPointerException) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Рецепт не найден", nullPointerException);
-        }
-    }
+
 
     @Operation(summary = "Этот роут для поиска рецепта по нескольким продуктам")
     @ApiResponses(value = {
@@ -140,9 +122,12 @@ public class UserController {
                     description = "Не найдено")
     })
     @PostMapping("/setReminder")
-    public String createReminder(@RequestParam int hour, @RequestParam int minute, @RequestParam String message) {
-        reminderService.setReminder(hour, minute, message);
-        return "Напоминание успешно установлено";
+    public Long createReminder(@RequestParam int hour, @RequestParam int minute, @RequestParam String message) {
+        try {
+            return reminderService.setReminder(hour, minute, message);
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Не удалось установить напоминание", e);
+        }
     }
     @Operation(summary = "Этот роут возвращает все напоминание")
     @ApiResponses(value = {

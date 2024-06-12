@@ -26,14 +26,13 @@ import java.util.stream.Collectors;
 public class ProductOfShopServiceImpl implements ProductOfShopService {
     private final ProductOfShopRepo productOfShopRepo;
     private final ModelMapper modelMapper;
-
     @Override
-    public void createProduct(CreateProductOfShopDto createProductOfShopDto) throws InvalidProductDataException, ProductAlreadyExistsException {
-        if (productOfShopRepo.existsByProductName(createProductOfShopDto.getProductName())) {
-            throw new ProductAlreadyExistsException("Продукт с таким именем уже существует");
-        }
-
+    public Long createProduct(CreateProductOfShopDto createProductOfShopDto) throws InvalidProductDataException, ProductAlreadyExistsException {
         try {
+            if (productOfShopRepo.existsByProductName(createProductOfShopDto.getProductName())) {
+                throw new ProductAlreadyExistsException("Продукт с таким именем уже существует");
+            }
+
             ProductOfShop product = new ProductOfShop();
             product.setProductName(createProductOfShopDto.getProductName());
             product.setPrice(createProductOfShopDto.getPrice());
@@ -44,13 +43,15 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
 
             product.updateInStock();
 
-            productOfShopRepo.save(product);
+            ProductOfShop savedProduct = productOfShopRepo.save(product);
+            return savedProduct.getId();
         } catch (DataIntegrityViolationException e) {
             throw new InvalidProductDataException("Ошибка целостности данных: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Не удалось создать продукт: " + e.getMessage(), e);
         }
     }
+
 
     @Override
     public CreateProductOfShopDto updateProduct(Long productId, CreateProductOfShopDto productDTO) throws InvalidProductDataException {
