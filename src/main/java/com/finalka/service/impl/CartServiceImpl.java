@@ -5,22 +5,19 @@ import com.finalka.entity.Cart;
 import com.finalka.entity.ProductOfShop;
 import com.finalka.entity.User;
 import com.finalka.exception.CartNotFoundException;
+import com.finalka.exception.OutOfStockException;
 import com.finalka.exception.ProductNotFoundException;
 import com.finalka.exception.UserNotFoundException;
-import com.finalka.mapper.ProductMapper;
-import com.finalka.mapper.UserMapper;
 import com.finalka.repo.CartRepo;
 import com.finalka.repo.ProductOfShopRepo;
 import com.finalka.service.CartService;
-import com.finalka.service.ProductOfShopService;
 import com.finalka.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,8 +54,8 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-
     @Override
+    @Transactional
     public void addProductToCart(Long cartId, Long productId) {
         try {
             Cart cart = repo.findById(cartId)
@@ -66,6 +63,10 @@ public class CartServiceImpl implements CartService {
 
             ProductOfShop product = productOfShopRepo.findById(productId)
                     .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+
+            if (product.getQuantityInStock() <= 0) {
+                throw new OutOfStockException("Продукт '" + product.getProductName() + "' отсутствует на складе");
+            }
 
             boolean productExistsInCart = cart.getProductOfShops().stream()
                     .anyMatch(p -> p.getId().equals(productId));
@@ -82,7 +83,9 @@ public class CartServiceImpl implements CartService {
             }
             recalculateTotalPrice(cart);
             repo.save(cart);
-        } catch (IllegalArgumentException e) {
+
+            log.info("Продукт '{}' успешно добавлен в корзину с ID {}", product.getProductName(), cart.getId());
+        } catch (IllegalArgumentException | OutOfStockException e) {
             log.error("Ошибка при добавлении товара в корзину: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
@@ -90,8 +93,6 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("Произошла неизвестная ошибка при добавлении товара в корзину", e);
         }
     }
-
-
 
     public void removeProductFromCart(Long cartId, Long productId) {
         try {
@@ -108,10 +109,7 @@ public class CartServiceImpl implements CartService {
 
             recalculateTotalPrice(cart);
             repo.save(cart);
-        } catch (IllegalArgumentException e) {
-            log.error("Ошибка при удалении товара из корзины: {}", e.getMessage());
-            throw e;
-        } catch (IllegalStateException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Ошибка при удалении товара из корзины: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
@@ -176,17 +174,7 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("Произошла неизвестная ошибка при поиске корзины", e);
         }
     }
-
-
-    private CartDto convertToDto(Cart cart) {
-        return modelMapper.map(cart, CartDto.class);
-    }
-
     private CartDetailDto convertToDetailsDto(Cart cart) {
         return modelMapper.map(cart, CartDetailDto.class);
-    }
-
-    private Cart convertToEntity(CartDto cartDto) {
-        return modelMapper.map(cartDto, Cart.class);
     }
 }

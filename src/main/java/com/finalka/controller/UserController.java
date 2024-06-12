@@ -232,10 +232,5 @@ public class UserController {
         }
         return reminderService.getAllReminders();
     }
-
-    @PutMapping("/update")
-    public UserDto updateUser(@RequestBody UpdateUserDto updateUserDto) throws UnauthorizedException, InvalidUserDataException {
-        return service.updateUser(updateUserDto);
-    }
 }
 

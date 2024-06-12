@@ -1,6 +1,5 @@
 package com.finalka.service;
 
-import com.finalka.dto.PurchaseDTO;
 import com.finalka.dto.PurchaseDetailsDto;
 
 public interface PurchaseService {

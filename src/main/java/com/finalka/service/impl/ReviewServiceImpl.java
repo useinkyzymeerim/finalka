@@ -5,7 +5,6 @@ import com.finalka.entity.Recipes;
 import com.finalka.entity.Review;
 import com.finalka.entity.User;
 import com.finalka.exception.InvalidDataException;
-import com.finalka.exception.ReviewNotFoundException;
 import com.finalka.repo.RecipesRepo;
 import com.finalka.repo.ReviewRepo;
 import com.finalka.repo.UserRepo;
@@ -70,7 +69,6 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
-
     @Transactional
     @Override
     public List<ReviewDTO> getReviewsByRecipeId(Long recipeId) {
@@ -90,9 +88,6 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
-
-
-
     private ReviewDTO convertToReviewDTO(Review review) {
         ReviewDTO reviewDTO = new ReviewDTO();
         reviewDTO.setId(review.getId());
@@ -104,7 +99,4 @@ public class ReviewServiceImpl implements ReviewService {
         reviewDTO.setUpdatedAt(review.getUpdatedAt());
         return reviewDTO;
     }
-
-
 }
-

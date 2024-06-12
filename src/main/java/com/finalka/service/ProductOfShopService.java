@@ -18,5 +18,4 @@ public interface ProductOfShopService {
     List<ProductOfShopDto> filterProductsByType(String type);
     List<ProductOfShopDto> filterProductsByAvailability(boolean inStock);
     List<ProductOfShopDto> getProductsByName(String productName);
-
 }

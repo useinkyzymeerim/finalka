@@ -405,7 +405,7 @@ public class RecipeServiceImpl implements RecipesService {
     }
 
     @Transactional
-    public RecipeUpdateDTO updateRecipe(RecipeUpdateDTO recipeUpdateDTO) {
+    public void updateRecipe(RecipeUpdateDTO recipeUpdateDTO) {
         try {
             log.info("START: RecipeServiceImpl - updateRecipe() {}", recipeUpdateDTO);
 
@@ -480,7 +480,6 @@ public class RecipeServiceImpl implements RecipesService {
             }
 
             log.info("END: RecipeServiceImpl - updateRecipe() {}", recipeUpdateDTO);
-            return recipeUpdateDTO;
 
         } catch (RecipeNotFoundException | RecipeDeletedException | ProductNotFoundException e) {
             throw e;
@@ -517,11 +516,8 @@ public class RecipeServiceImpl implements RecipesService {
 
             log.info("END: RecipeServiceImpl - removeProductFromRecipe() recipeId: {}, productId: {}", recipeId, productId);
 
-        } catch (RecipeNotFoundException | ProductNotFoundException e) {
-            throw e;
-        } catch (RecipeDeletedException | ProductDeletedException e) {
-            throw e;
-        } catch (RecipeProductLinkNotFoundException e) {
+        } catch (RecipeNotFoundException | ProductNotFoundException | RecipeDeletedException | ProductDeletedException |
+                 RecipeProductLinkNotFoundException e) {
             throw e;
         } catch (RuntimeException e) {
             throw new RecipeProductLinkRemovalException("Не удалось удалить связь продукта с рецептом", e);
@@ -530,6 +526,4 @@ public class RecipeServiceImpl implements RecipesService {
             throw new RecipeProductLinkRemovalException("Не удалось удалить связь продукта с рецептом", e);
         }
     }
-
 }
-

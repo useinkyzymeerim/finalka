@@ -180,6 +180,4 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
             throw new ServiceException("Ошибка при фильтрации продуктов по наличию", ex);
         }
     }
-
-
 }

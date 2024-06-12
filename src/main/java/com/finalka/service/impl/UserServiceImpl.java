@@ -189,5 +189,4 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new RuntimeException("Внутренняя ошибка сервера при сбросе пароля", e);
         }
     }
-
 }
