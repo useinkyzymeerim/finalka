@@ -6,6 +6,5 @@ import java.util.List;
 
 public interface ReviewService {
     ReviewDTO createReview(ReviewDTO reviewDTO);
-
     List<ReviewDTO> getReviewsByRecipeId(Long recipeId);
 }

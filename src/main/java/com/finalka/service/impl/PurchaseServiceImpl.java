@@ -1,40 +1,31 @@
 package com.finalka.service.impl;
 
-import com.finalka.dto.ProductOfShopDto;
-import com.finalka.dto.PurchaseDTO;
 import com.finalka.dto.PurchaseDetailsDto;
-import com.finalka.entity.Cart;
-import com.finalka.entity.ProductOfShop;
-import com.finalka.entity.Purchase;
-import com.finalka.entity.User;
+import com.finalka.entity.*;
 import com.finalka.mapper.PurchaseMapper;
-import com.finalka.repo.CartRepo;
-import com.finalka.repo.ProductOfShopRepo;
-import com.finalka.repo.PurchaseRepo;
-import com.finalka.repo.UserRepo;
+import com.finalka.repo.*;
 import com.finalka.service.ProductOfShopService;
 import com.finalka.service.PurchaseService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.service.spi.ServiceException;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-
 public class PurchaseServiceImpl implements PurchaseService {
     private final CartRepo cartRepository;
     private final ProductOfShopService productOfShopService;
     private final PurchaseRepo repo;
     private final PurchaseMapper purchaseMapper;
     private final ProductOfShopRepo productOfShopRepo;
+    private final CardRepo cardRepository;
+    private final BankAccountRepo bankAccountRepository;
 
     @Override
     @Transactional
@@ -48,23 +39,37 @@ public class PurchaseServiceImpl implements PurchaseService {
                 throw new IllegalStateException("Корзина пуста. Нечего покупать.");
             }
 
+            Card card = cardRepository.findByUserAndActiveTrue(user)
+                    .orElseThrow(() -> new IllegalStateException("Нет активной привязанной карты"));
+
+            BankAccount bankAccount = card.getBankAccount();
+            if (bankAccount == null) {
+                throw new IllegalStateException("Карта не связана с банковским счетом");
+            }
+
+            double totalPrice = cart.getTotalPrice();
+
+            if (bankAccount.getBalance().compareTo(BigDecimal.valueOf(totalPrice)) < 0) {
+                throw new IllegalStateException("Недостаточно средств на банковском счете");
+            }
+
             for (ProductOfShop cartProduct : cart.getProductOfShops()) {
                 if (cartProduct.getQuantity() > cartProduct.getQuantityInStock()) {
                     throw new IllegalStateException("Недостаточное количество продукта \"" + cartProduct.getProductName() + "\" в наличии на складе");
                 }
             }
 
+            bankAccount.setBalance(bankAccount.getBalance().subtract(BigDecimal.valueOf(totalPrice)));
+            bankAccountRepository.save(bankAccount);
+
             Purchase purchase = new Purchase();
             purchase.setUser(user);
             purchase.setCart(cart);
             purchase.setPurchaseDate(new Date());
-
-            double totalPrice = cart.getTotalPrice();
             purchase.setTotalPrice(totalPrice);
 
             List<ProductOfShop> purchasedProducts = new ArrayList<>();
             for (ProductOfShop cartProduct : cart.getProductOfShops()) {
-
                 productOfShopService.decreaseProductQuantityInStock(cartProduct.getId(), cartProduct.getQuantity());
                 purchasedProducts.add(cartProduct);
             }
@@ -96,5 +101,4 @@ public class PurchaseServiceImpl implements PurchaseService {
             throw new ServiceException("Ошибка при получении информации о покупке", ex);
         }
     }
-
 }

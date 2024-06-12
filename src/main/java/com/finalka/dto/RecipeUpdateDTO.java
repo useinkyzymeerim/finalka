@@ -36,6 +36,9 @@ public class RecipeUpdateDTO {
     @Min(value = 1, message = "Количество продукта должно быть не менее 1")
     private Integer quantityOfProduct;
 
+    @NotNull(message = "Поле порции не должно быть пустым" )
+    private Integer portion;
+
     @NotNull(message = "Время приготовления не должно быть пустым")
     @Min(value = 1, message = "Время приготовления должно быть не менее 1 минуты")
     private Integer cookingTime;

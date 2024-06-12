@@ -2,7 +2,6 @@ package com.finalka.service;
 
 import com.finalka.dto.*;
 
-import java.util.List;
 
 public interface CartService {
     void createCart(CreateCartDto createCartDto);

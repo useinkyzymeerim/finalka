@@ -27,7 +27,6 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.hibernate.query.sqm.tree.SqmNode.log;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +34,6 @@ import static org.hibernate.query.sqm.tree.SqmNode.log;
 public class MenuServiceImpl implements MenuService {
     private final MenuRepo menuRepo;
     private final RecipesWithProductsRepo recipesWithProductsRepo;
-    private final RecipesRepo recipesRepo;
 
     @Override
     public CreateMenuDto save(CreateMenuDto menuDTO) {
@@ -295,5 +293,4 @@ public class MenuServiceImpl implements MenuService {
             throw new RuntimeException("Произошла неизвестная ошибка при обновлении меню", e);
         }
     }
-
 }

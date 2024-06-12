@@ -35,6 +35,7 @@ public class СommunisController {
     private final ProductOfShopService productOfShopService;
     private final PurchaseService purchaseService;
     private final UserService userService;
+    private final CardService cardService;
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -117,7 +118,7 @@ public class СommunisController {
                     description = "Меню с рецептами не найдено")
     })
 
-    @GetMapping("/{menuId}/recipes")
+    @GetMapping("/menu/{menuId}/recipes")
     public List<RecipesDto> getRecipesByMenuId(@PathVariable Long menuId) {
         return menuService.getRecipesByMenuId(menuId);
     }
@@ -176,7 +177,7 @@ public class СommunisController {
                     description = "Меню не найден")
     })
     @Operation(summary = "Роут для поиска меню по id")
-    @GetMapping("/{menuId}")
+    @GetMapping("/menu/{menuId}")
     public ResponseEntity<MenuDTO> findMenuById(@PathVariable Long id){
         try {
             return new ResponseEntity<>(menuService.findById(id), HttpStatus.OK);
@@ -269,7 +270,7 @@ public class СommunisController {
                     responseCode = "404",
                     description = "Не найдено")
     })
-    @GetMapping("/{cartId}")
+    @GetMapping("/cart/{cartId}")
     public CartDetailDto getCartById(@PathVariable Long cartId) {
         try {
             return cartService.findCartById(cartId);
@@ -418,7 +419,7 @@ public class СommunisController {
                     responseCode = "404",
                     description = "Не найдено")
     })
-    @PostMapping("/{cartId}")
+    @PostMapping("/purchase/{cartId}")
     public void purchaseProducts(@PathVariable Long cartId) {
         purchaseService.purchaseProductsFromCart(cartId);
     }
@@ -455,5 +456,12 @@ public class СommunisController {
     @PostMapping("/reset-password")
     public void resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
         userService.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
+    }
+
+    @PostMapping("/link")
+    public ResponseEntity<String> linkCardToUser(@RequestBody CardLinkRequest request) {
+        String result = cardService.linkCardToUser(request.getCardNumber(),
+                request.getCardHolderName(), request.getExpiryDate(), request.getCvv());
+        return ResponseEntity.ok(result);
     }
 }

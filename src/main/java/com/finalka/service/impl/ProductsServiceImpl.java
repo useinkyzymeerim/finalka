@@ -1,15 +1,9 @@
 package com.finalka.service.impl;
 
 
-import com.finalka.dto.MenuDTO;
 import com.finalka.dto.ProductDTO;
-import com.finalka.entity.Menu;
 import com.finalka.entity.Products;
-import com.finalka.entity.Recipes;
-import com.finalka.entity.RecipesWithProducts;
 import com.finalka.repo.ProductRepo;
-import com.finalka.repo.RecipesRepo;
-import com.finalka.repo.RecipesWithProductsRepo;
 import com.finalka.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -126,5 +119,4 @@ public class ProductsServiceImpl implements ProductService {
         log.info("КОНЕЦ: ProductsServiceImpl - update(). Обновленная запись - {}", productDTO);
         return productDTO;
     }
-
 }

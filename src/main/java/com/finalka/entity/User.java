@@ -9,6 +9,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
@@ -45,5 +46,8 @@ import static jakarta.persistence.FetchType.EAGER;
         private LocalDateTime lastAuthentication;
 
         private String resetToken;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Card> cards = new HashSet<>();
 }
 

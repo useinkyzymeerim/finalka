@@ -19,8 +19,6 @@ import java.util.List;
         @SequenceGenerator(name = "cart_seq_generator", sequenceName = "cart_seq", allocationSize = 1)
         private Long id;
 
-        @NotNull(message = "Общая цена не должна быть пустой")
-        @DecimalMin(value = "0.0", inclusive = false, message = "Общая цена должна быть больше нуля")
         private Double totalPrice;
 
         @OneToMany(cascade = CascadeType.ALL)
@@ -29,7 +27,6 @@ import java.util.List;
 
         @OneToOne
         @JoinColumn(name = "user_id")
-        @NotNull(message = "Пользователь не должен быть пустым")
         private User user;
 
         @OneToMany(mappedBy = "cart")
