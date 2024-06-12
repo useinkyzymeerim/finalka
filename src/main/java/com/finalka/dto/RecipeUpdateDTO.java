@@ -1,5 +1,6 @@
 package com.finalka.dto;
 
+import com.finalka.enums.Categories;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -26,6 +27,7 @@ public class RecipeUpdateDTO {
     @NotNull(message = "Описание не должно быть пустым")
     @Size(min = 1, message = "Описание должно содержать хотя бы один символ")
     private String description;
+    private Categories categories;
 
     private byte[] imageBase64;
 

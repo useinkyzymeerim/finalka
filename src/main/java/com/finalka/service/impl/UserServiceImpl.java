@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public UserDto save(UserDto userDto) throws UsernameAlreadyExistsException, EmailSendingException, InvalidUserDataException {
+    public Long save(UserDto userDto) throws UsernameAlreadyExistsException, EmailSendingException, InvalidUserDataException {
         try {
             if (userRepo.existsByUsername(userDto.getUsername())) {
                 throw new UsernameAlreadyExistsException("Имя пользователя уже существует");
@@ -61,11 +61,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
             userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
             User user = userMapper.toEntity(userDto);
-            userRepo.save(user);
+            user = userRepo.save(user);
 
             sendRegistrationEmail(userDto);
 
-            return userMapper.toDto(user);
+            return user.getId();
         } catch (DataIntegrityViolationException e) {
             throw new InvalidUserDataException("Ошибка целостности данных: " + e.getMessage());
         } catch (MailException e) {
@@ -76,6 +76,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new RuntimeException("Не удалось сохранить пользователя", e);
         }
     }
+
 
 
     private void sendRegistrationEmail(UserDto userDto) throws EmailSendingException {

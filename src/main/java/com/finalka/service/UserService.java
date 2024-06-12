@@ -9,7 +9,7 @@ import com.finalka.exception.UnauthorizedException;
 import java.util.List;
 
 public interface UserService {
-    UserDto save(UserDto user) throws InvalidUserDataException;
+    Long save(UserDto user) throws InvalidUserDataException;
     List<UserDto> getAll();
     UserDto getById(Long id);
     UserDto updateUser(UpdateUserDto updateUserDto) throws UnauthorizedException, InvalidUserDataException;

@@ -2,6 +2,7 @@ package com.finalka.dto;
 
 import com.finalka.entity.Menu;
 import com.finalka.entity.User;
+import com.finalka.enums.Categories;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,9 @@ public class RecipeWithProductDTO {
     private String description;
     @NotNull(message = "Поле порции не должно быть пустым" )
     private Integer portion;
+
+    @NotNull(message = "Категория не должна быть пустой")
+    private Categories categories;
 
     private byte[] imageBase64;
 

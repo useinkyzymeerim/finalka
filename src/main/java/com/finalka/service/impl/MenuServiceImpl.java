@@ -238,6 +238,7 @@ public class MenuServiceImpl implements MenuService {
             }
             Menu menu = menuOptional.get();
             return menu.getRecipes().stream()
+                    .filter(recipe -> recipe.getDeletedAt() == null)
                     .map(recipe -> RecipesDto.builder()
                             .nameOfFood(recipe.getNameOfFood())
                             .imageBase64(recipe.getImageBase64())

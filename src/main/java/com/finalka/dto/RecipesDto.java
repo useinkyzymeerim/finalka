@@ -1,5 +1,6 @@
 package com.finalka.dto;
 
+import com.finalka.enums.Categories;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,7 @@ import java.sql.Timestamp;
 public class RecipesDto {
     private Long Id;
     private String nameOfFood;
+    private Categories categories;
     private byte[] imageBase64;
 
     private String createdBy;
