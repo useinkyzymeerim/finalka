@@ -18,22 +18,24 @@ public class CardServiceImpl implements CardService {
     private final UserRepo userRepo;
 
     @Transactional
-        public String linkCardToUser(String cardNumber, String cardHolderName, String expiryDate, String cvv) {
+    public String linkCardToUser(String cardNumber, String cardHolderName, String expiryDate, String cvv) {
+        cardHolderName = cardHolderName.trim();
+        expiryDate = expiryDate.trim();
+        cvv = cvv.trim();
 
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
 
-            User currentUser = userRepo.findByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+        User currentUser = userRepo.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
-            Card card = cardRepo.findByCardNumberAndCardHolderNameAndExpiryDateAndCvv(cardNumber, cardHolderName, expiryDate, cvv)
-                    .orElseThrow(() -> new RuntimeException("Карта с указанными данными не найдена"));
+        Card card = cardRepo.findByCardNumberAndCardHolderNameAndExpiryDateAndCvv(cardNumber, cardHolderName, expiryDate, cvv)
+                .orElseThrow(() -> new RuntimeException("Карта с указанными данными не найдена"));
 
-            card.setUser(currentUser);
-            card.setActive(true);
-            cardRepo.save(card);
+        card.setUser(currentUser);
+        card.setActive(true);
+        cardRepo.save(card);
 
-            return "Карта успешно привязана к пользователю";
-        }
+        return "Карта успешно привязана к пользователю";
     }
-
+}
