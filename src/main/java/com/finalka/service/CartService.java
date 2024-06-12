@@ -4,7 +4,7 @@ import com.finalka.dto.*;
 
 
 public interface CartService {
-    void createCart(CreateCartDto createCartDto);
+    Long createCart(CreateCartDto createCartDto);
     void addProductToCart(Long cartId, Long productId) ;
     void removeProductFromCart(Long cartId, Long productId);
     CartDetailDto updateCart(Long cartId, UpdateProductQuantityDto updateProductQuantityDto);

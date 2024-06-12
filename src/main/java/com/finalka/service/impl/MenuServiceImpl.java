@@ -67,6 +67,7 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+
     private void validateMenuDto(CreateMenuDto menuDTO) {
         if (menuDTO.getNameOfMenu() == null || menuDTO.getNameOfMenu().isEmpty()) {
             throw new MenuSaveException("Название меню не должно быть пустым");

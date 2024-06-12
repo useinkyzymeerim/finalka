@@ -36,6 +36,26 @@ public class СommunisController {
     private final PurchaseService purchaseService;
     private final UserService userService;
     private final CardService cardService;
+
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Рецепт найден",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = RecipesDto.class))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Рецепт не найден")
+    })
+    @Operation(summary = "Роут для поиска рецепт по id")
+    @GetMapping("/{id}")
+    public RecipesDto findById(@PathVariable Long id) {
+        try {
+            return recipeService.findById(id);
+        } catch (NullPointerException nullPointerException) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Рецепт не найден", nullPointerException);
+        }
+    }
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -135,14 +155,16 @@ public class СommunisController {
     })
     @Operation(summary = "Роут для создание меню")
     @PostMapping("/createMenu")
-    public ResponseEntity<String> saveMenu(@RequestBody CreateMenuDto menuDTO){
+    public ResponseEntity<Long> saveMenu(@RequestBody CreateMenuDto menuDTO){
         try {
-            menuService.save(menuDTO);
-            return new ResponseEntity<>("Меню успешно создана", HttpStatus.CREATED);
-        } catch (Exception e){
-            return new ResponseEntity<>("Не удалось создать меню", HttpStatus.BAD_REQUEST);
+            CreateMenuDto savedMenuDTO = menuService.save(menuDTO);
+            return new ResponseEntity<>(savedMenuDTO.getId(), HttpStatus.CREATED);
+        } catch (MenuSaveException e) {
+            log.error("Не удалось создать меню: {}");
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
+
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -221,16 +243,17 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @PostMapping("/saveCart")
-    public String saveCart(@RequestBody CreateCartDto createCartDto) {
+    public ResponseEntity<Long> saveCart(@RequestBody CreateCartDto createCartDto) {
         try {
-            cartService.createCart(createCartDto);
-            return "Корзина успешно создана";
+            Long cartId = cartService.createCart(createCartDto);
+            return new ResponseEntity<>(cartId, HttpStatus.CREATED);
         } catch (UserNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не удалось создать корзину", e);
         }
     }
+
 
     @Operation(summary = "Этот роут для обновления количество продуктов в корзине по айди корзины")
     @ApiResponses(value = {

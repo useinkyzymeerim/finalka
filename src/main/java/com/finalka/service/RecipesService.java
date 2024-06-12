@@ -10,7 +10,7 @@ import java.util.List;
 public interface RecipesService {
     RecipeDetailsDTO getRecipeWithProductsById(Long recipeId);
     List<RecipeWithProductDTO> findRecipesByProducts(String products);
-    void createRecipeWithProducts(RecipeWithProductDTO recipeDTO);
+    Long createRecipeWithProducts(RecipeWithProductDTO recipeDTO);
     String delete(Long id);
     RecipesDto findById(Long id);
     List<RecipesDto> findAll () throws RecipeNotFoundException;

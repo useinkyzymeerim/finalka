@@ -37,7 +37,7 @@ public class ReminderServiceImpl implements ReminderService {
     private final UserRepo userRepo;
 
     @Transactional
-    public void setReminder(int hour, int minute, String message) {
+    public Long setReminder(int hour, int minute, String message) {
         log.info("Установка напоминания на {}:{}", hour, minute);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -65,11 +65,14 @@ public class ReminderServiceImpl implements ReminderService {
         reminderEntity.setCreatedBy(username);
         reminderEntity.setCreatedAt(new Timestamp(System.currentTimeMillis()));
 
-        reminderRepo.save(reminderEntity);
-        log.info("Сохраненное напоминание: {}", reminderEntity);
+        Reminder savedReminder = reminderRepo.save(reminderEntity);
+        log.info("Сохраненное напоминание: {}", savedReminder);
 
-        scheduleReminderTask(reminderEntity.getId(), message, email, hour, minute);
+        scheduleReminderTask(savedReminder.getId(), message, email, hour, minute);
+
+        return savedReminder.getId();
     }
+
 
     private LocalDateTime calculateNextReminderTime(int hour, int minute) {
         LocalDateTime now = LocalDateTime.now();
