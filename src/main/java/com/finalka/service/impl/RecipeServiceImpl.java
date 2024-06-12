@@ -125,6 +125,7 @@ public class RecipeServiceImpl implements RecipesService {
                 .nameOfFood(recipe.getNameOfFood())
                 .description(recipe.getDescription())
                 .portion(recipe.getPortion())
+                .categories(recipe.getCategories())
                 .imageBase64(recipe.getImageBase64())
                 .linkOfVideo(recipe.getLinkOfVideo())
                 .quantityOfProduct(recipe.getQuantityOfProduct())
@@ -159,6 +160,7 @@ public class RecipeServiceImpl implements RecipesService {
                     .nameOfFood(recipeDTO.getNameOfFood())
                     .description(recipeDTO.getDescription())
                     .portion(recipeDTO.getPortion())
+                    .categories(recipeDTO.getCategories())
                     .imageBase64(recipeDTO.getImageBase64())
                     .linkOfVideo(recipeDTO.getLinkOfVideo())
                     .quantityOfProduct(recipeDTO.getQuantityOfProduct())
@@ -274,6 +276,7 @@ public class RecipeServiceImpl implements RecipesService {
         return RecipesDto.builder()
                 .Id(recipes.getId())
                 .nameOfFood(recipes.getNameOfFood())
+                .categories(recipes.getCategories())
                 .createdBy(recipes.getCreatedBy())
                 .createdAt(recipes.getCreatedAt())
                 .lastUpdatedBy(recipes.getLastUpdatedBy())
@@ -420,6 +423,7 @@ public class RecipeServiceImpl implements RecipesService {
             String username = authentication.getName();
             recipe.setNameOfFood(recipeUpdateDTO.getNameOfFood());
             recipe.setDescription(recipeUpdateDTO.getDescription());
+            recipe.setCategories(recipeUpdateDTO.getCategories());
             recipe.setImageBase64(recipeUpdateDTO.getImageBase64());
             recipe.setLinkOfVideo(recipeUpdateDTO.getLinkOfVideo());
             recipe.setQuantityOfProduct(recipeUpdateDTO.getQuantityOfProduct());

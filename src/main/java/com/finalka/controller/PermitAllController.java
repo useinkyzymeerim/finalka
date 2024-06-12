@@ -5,6 +5,7 @@ import com.finalka.dto.UserDto;
 import com.finalka.exception.EmailSendingException;
 import com.finalka.exception.InvalidUserDataException;
 import com.finalka.exception.UsernameAlreadyExistsException;
+import com.finalka.repo.UserRepo;
 import com.finalka.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -15,11 +16,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Public API", description = "Тут находятся все общие роуты для не авторизованных пользователей")
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("api/all")
 public class PermitAllController {
 
@@ -36,14 +41,21 @@ public class PermitAllController {
                     description = "Не найдено")
     })
     @PostMapping("/registration")
-    public String save(@Valid @RequestBody UserDto userToSave) {
+    public Long save(@Valid @RequestBody UserDto userToSave) {
         try {
-            service.save(userToSave);
-            return "Регистрация пользователя прошла успешно.";
-        } catch (UsernameAlreadyExistsException | EmailSendingException | InvalidUserDataException e) {
-            return e.getMessage();
-        } catch (Exception e) {
-            return "Не удалось зарегистрировать пользователя. Пожалуйста, попробуйте еще раз.";
+            return service.save(userToSave);
+        } catch (UsernameAlreadyExistsException e) {
+
+            log.error("Ошибка регистрации: имя пользователя уже существует.", e);
+            return null;
+        } catch (EmailSendingException e) {
+
+            log.error("Ошибка регистрации: не удалось отправить письмо с подтверждением.", e);
+            return null;
+        } catch (InvalidUserDataException e) {
+
+            log.error("Ошибка регистрации: недопустимые данные пользователя.", e);
+            return null;
         }
     }
 }

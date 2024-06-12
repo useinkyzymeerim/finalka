@@ -1,4 +1,5 @@
 package com.finalka.entity;
+import com.finalka.enums.Units;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.hibernate.validator.constraints.URL;
+import com.finalka.enums.Categories;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -34,6 +36,10 @@ public class Recipes {
     private String description;
     @NotNull(message = "Поле порции не должно быть пустым" )
     private Integer portion;
+    @NotNull(message = "Категория не должна быть пустой")
+    @Enumerated(EnumType.STRING)
+    private Categories categories;
+
     @Basic(fetch = FetchType.EAGER)
     @Lob
     private byte[] imageBase64;
