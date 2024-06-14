@@ -390,7 +390,7 @@ public class СommunisController {
                     responseCode = "404",
                     description = "Не найдено")
     })
-    @PostMapping("/findByName")
+    @GetMapping("/findByName")
     public ResponseEntity<List<ProductOfShopDto>> getProductsByName(@RequestParam String productName) {
         List<ProductOfShopDto> productDtos = productOfShopService.getProductsByName(productName);
         return ResponseEntity.ok(productDtos);
