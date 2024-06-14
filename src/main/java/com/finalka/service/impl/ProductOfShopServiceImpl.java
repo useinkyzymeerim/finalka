@@ -123,8 +123,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
                 .collect(Collectors.toList());
     }
 
-
-
+    
     public List<ProductOfShopDto> getAllProducts() {
         try {
             List<ProductOfShop> products = productOfShopRepo.findAllByDeletedFalse();

@@ -71,7 +71,7 @@ public class UserController {
                     description = "Не найдено")
     })
 
-    @PostMapping("/search")
+    @GetMapping("/search")
     public List<RecipeWithProductDTO> findRecipesByProducts(@RequestParam String userProductsString) {
         return recipeService.findRecipesByProducts(userProductsString);
     }
