@@ -32,7 +32,7 @@ public class CartServiceImpl implements CartService {
     private final ProductOfShopRepo productOfShopRepo;
 
     @Override
-    public void createCart(CreateCartDto createCartDto) {
+    public Long createCart(CreateCartDto createCartDto) {
         try {
             UserDto userDtoOfShop = userService.getById(createCartDto.getUserId());
             if (userDtoOfShop == null) {
@@ -47,6 +47,8 @@ public class CartServiceImpl implements CartService {
 
             createCartDto.setId(savedCart.getId());
             createCartDto.setUserId(savedCart.getUser().getId());
+
+            return savedCart.getId();
         } catch (UserNotFoundException e) {
             log.error("Ошибка при создании корзины: {}", e.getMessage());
             throw e;
@@ -55,7 +57,6 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("Произошла неизвестная ошибка при создании корзины", e);
         }
     }
-
     @Override
     @Transactional
     public void addProductToCart(Long cartId, Long productId) {
