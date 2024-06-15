@@ -219,19 +219,10 @@ public class ReminderServiceImpl implements ReminderService {
         List<Reminder> reminders = reminderRepo.findByCreatedByAndDeletedAtIsNull(currentUser);
         List<ReminderDto> reminderDtos = reminders.stream()
                 .map(reminder -> ReminderDto.builder()
-                        .id(reminder.getId())
-                        .userId(reminder.getUserId())
-                        .reminderTime(reminder.getReminderTime())
                         .message(reminder.getMessage())
                         .email(reminder.getEmail())
                         .hour(reminder.getHour())
                         .minute(reminder.getMinute())
-                        .createdBy(reminder.getCreatedBy())
-                        .createdAt(reminder.getCreatedAt())
-                        .lastUpdatedBy(reminder.getLastUpdatedBy())
-                        .lastUpdatedAt(reminder.getLastUpdatedAt())
-                        .deletedBy(reminder.getDeletedBy())
-                        .deletedAt(reminder.getDeletedAt())
                         .build())
                 .collect(Collectors.toList());
 

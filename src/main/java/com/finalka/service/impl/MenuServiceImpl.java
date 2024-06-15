@@ -205,31 +205,6 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
-
-    @Override
-    public List<MenuWithRecipeDTO> getMenuWithRecipes(Long menuId) {
-        List<MenuWithRecipeDTO> menuWithRecipesDTOList = new ArrayList<>();
-
-        Optional<Menu> menuOptional = menuRepo.findById(menuId);
-        menuOptional.ifPresent(menu -> {
-            MenuWithRecipeDTO menuWithRecipesDTO = new MenuWithRecipeDTO();
-            menuWithRecipesDTO.setMenuId(menu.getId());
-            menuWithRecipesDTO.setNameOfMenu(menu.getNameOfMenu());
-
-            List<RecipesDto> recipeDTOList = new ArrayList<>();
-            for (Recipes recipe : menu.getRecipes()) {
-                RecipesDto recipeDTO = new RecipesDto();
-                recipeDTO.setId(recipe.getId());
-                recipeDTO.setNameOfFood(recipe.getNameOfFood());
-                recipeDTOList.add(recipeDTO);
-            }
-            menuWithRecipesDTO.setRecipes(recipeDTOList);
-            menuWithRecipesDTOList.add(menuWithRecipesDTO);
-        });
-
-        return menuWithRecipesDTOList;
-    }
-
     @Transactional
     public List<RecipesDto> getRecipesByMenuId(Long menuId) {
         try {
@@ -242,7 +217,10 @@ public class MenuServiceImpl implements MenuService {
                     .filter(recipe -> recipe.getDeletedAt() == null)
                     .map(recipe -> RecipesDto.builder()
                             .nameOfFood(recipe.getNameOfFood())
+                            .categories(recipe.getCategories())
                             .imageBase64(recipe.getImageBase64())
+                            .createdBy(recipe.getCreatedBy())
+                            .createdAt(recipe.getCreatedAt())
                             .build())
                     .collect(Collectors.toList());
         } catch (MenuNotFoundException e) {

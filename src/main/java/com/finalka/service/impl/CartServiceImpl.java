@@ -17,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,8 @@ public class CartServiceImpl implements CartService {
     private final UserService userService;
     private final ProductOfShopRepo productOfShopRepo;
 
-    public Long createCart(CreateCartDto createCartDto) {
+    @Override
+    public void createCart(CreateCartDto createCartDto) {
         try {
             UserDto userDtoOfShop = userService.getById(createCartDto.getUserId());
             if (userDtoOfShop == null) {
@@ -43,7 +45,8 @@ public class CartServiceImpl implements CartService {
 
             Cart savedCart = repo.save(cart);
 
-            return savedCart.getId();
+            createCartDto.setId(savedCart.getId());
+            createCartDto.setUserId(savedCart.getUser().getId());
         } catch (UserNotFoundException e) {
             log.error("Ошибка при создании корзины: {}", e.getMessage());
             throw e;
@@ -52,7 +55,6 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("Произошла неизвестная ошибка при создании корзины", e);
         }
     }
-
 
     @Override
     @Transactional
@@ -68,18 +70,18 @@ public class CartServiceImpl implements CartService {
                 throw new OutOfStockException("Продукт '" + product.getProductName() + "' отсутствует на складе");
             }
 
-            boolean productExistsInCart = cart.getProductOfShops().stream()
+            boolean productExistsInCart = cart.getProducts().stream()
                     .anyMatch(p -> p.getId().equals(productId));
 
             if (productExistsInCart) {
-                ProductOfShop existingProduct = cart.getProductOfShops().stream()
+                ProductOfShop existingProduct = cart.getProducts().stream()
                         .filter(p -> p.getId().equals(productId))
                         .findFirst()
                         .orElseThrow(() -> new IllegalArgumentException("Продукт не найден в корзине"));
                 existingProduct.setQuantity(existingProduct.getQuantity() + 1);
             } else {
                 product.setQuantity(1);
-                cart.getProductOfShops().add(product);
+                cart.getProducts().add(product);
             }
             recalculateTotalPrice(cart);
             repo.save(cart);
@@ -94,16 +96,18 @@ public class CartServiceImpl implements CartService {
         }
     }
 
+    @Override
+    @Transactional
     public void removeProductFromCart(Long cartId, Long productId) {
         try {
             Cart cart = repo.findById(cartId)
                     .orElseThrow(() -> new IllegalArgumentException("Корзина не найдена"));
 
-            if (cart.getProductOfShops().isEmpty()) {
+            if (cart.getProducts().isEmpty()) {
                 throw new IllegalStateException("Корзина пуста, нет продуктов для удаления");
             }
 
-            cart.setProductOfShops(cart.getProductOfShops().stream()
+            cart.setProducts(cart.getProducts().stream()
                     .filter(product -> !product.getId().equals(productId))
                     .collect(Collectors.toList()));
 
@@ -118,19 +122,14 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-    private void recalculateTotalPrice(Cart cart) {
-        double totalPrice = cart.getProductOfShops().stream()
-                .mapToDouble(product -> product.getPrice() * product.getQuantity())
-                .sum();
-        cart.setTotalPrice(totalPrice);
-    }
-
+    @Override
+    @Transactional
     public CartDetailDto updateCart(Long cartId, UpdateProductQuantityDto updateProductQuantityDto) {
         try {
             Cart cart = repo.findById(cartId)
                     .orElseThrow(() -> new CartNotFoundException("Корзина не найдена"));
 
-            ProductOfShop productToUpdate = cart.getProductOfShops().stream()
+            ProductOfShop productToUpdate = cart.getProducts().stream()
                     .filter(product -> product.getId().equals(updateProductQuantityDto.getProductId()))
                     .findFirst()
                     .orElseThrow(() -> new ProductNotFoundException("Продукт не найден в корзине"));
@@ -138,12 +137,7 @@ public class CartServiceImpl implements CartService {
             int newQuantity = updateProductQuantityDto.getQuantity();
             productToUpdate.setQuantity(newQuantity);
 
-            double totalPrice = cart.getProductOfShops().stream()
-                    .mapToDouble(p -> p.getPrice() * p.getQuantity())
-                    .sum();
-
-            cart.setTotalPrice(totalPrice);
-
+            recalculateTotalPrice(cart);
             Cart updatedCart = repo.save(cart);
 
             return convertToDetailsDto(updatedCart);
@@ -156,7 +150,8 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-
+    @Override
+    @Transactional(readOnly = true)
     public CartDetailDto findCartById(Long cartId) {
         try {
             Optional<Cart> optionalCart = repo.findById(cartId);
@@ -174,7 +169,22 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("Произошла неизвестная ошибка при поиске корзины", e);
         }
     }
+
+    private void recalculateTotalPrice(Cart cart) {
+        double totalPrice = cart.getProducts().stream()
+                .mapToDouble(product -> product.getPrice() * product.getQuantity())
+                .sum();
+        cart.setTotalPrice(totalPrice);
+    }
+
     private CartDetailDto convertToDetailsDto(Cart cart) {
-        return modelMapper.map(cart, CartDetailDto.class);
+        List<ProductOfShopDetailsDto> productDtos = cart.getProducts().stream()
+                .map(product -> modelMapper.map(product, ProductOfShopDetailsDto.class))
+                .collect(Collectors.toList());
+
+        return CartDetailDto.builder()
+                .productOfShops(productDtos)
+                .totalPrice(cart.getTotalPrice())
+                .build();
     }
 }
