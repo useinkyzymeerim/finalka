@@ -13,9 +13,6 @@ public interface MenuService {
 
     List<MenuDTO> findAll() throws Exception;
     List<RecipesDto> getRecipesByMenuId(Long menuId);
-
-    List<MenuWithRecipeDTO> getMenuWithRecipes(Long menuId);
-
     MenuDTO findById(Long id);
     List<Map<String, Object>>calculateRequiredProductsForMenu (Long id);
     CreateMenuDto save(CreateMenuDto menuDTO);

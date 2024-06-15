@@ -21,9 +21,13 @@ import java.util.List;
 
         private Double totalPrice;
 
-        @OneToMany(cascade = CascadeType.ALL)
-        @JoinColumn(name = "cart_id")
-        private List<ProductOfShop> productOfShops;
+        @ManyToMany
+        @JoinTable(
+                name = "cart_products",
+                joinColumns = @JoinColumn(name = "cart_id"),
+                inverseJoinColumns = @JoinColumn(name = "product_of_shop_id")
+        )
+        private List<ProductOfShop> products;
 
         @OneToOne
         @JoinColumn(name = "user_id")
