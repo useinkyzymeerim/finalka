@@ -58,9 +58,8 @@ public class ProductOfShop {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
+    @ManyToMany(mappedBy = "products")
+    private List<Cart> carts;
 
     @ManyToMany(mappedBy = "purchasedProducts")
     private List<Purchase> purchases;

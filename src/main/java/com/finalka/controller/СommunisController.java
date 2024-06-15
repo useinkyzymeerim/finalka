@@ -1,7 +1,9 @@
 package com.finalka.controller;
 
 import com.finalka.dto.*;
+import com.finalka.entity.User;
 import com.finalka.exception.*;
+import com.finalka.repo.UserRepo;
 import com.finalka.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -13,6 +15,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -36,6 +41,9 @@ public class СommunisController {
     private final PurchaseService purchaseService;
     private final UserService userService;
     private final CardService cardService;
+    private final FavoriteService favoriteService;
+    private final UserRepo userRepo;
+
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -220,7 +228,7 @@ public class СommunisController {
                     responseCode = "404",
                     description = "Не найдено")
     })
-    @PostMapping("/saveCart")
+        @PostMapping("/saveCart")
     public String saveCart(@RequestBody CreateCartDto createCartDto) {
         try {
             cartService.createCart(createCartDto);
@@ -458,10 +466,50 @@ public class СommunisController {
         userService.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
     }
 
-    @PostMapping("/link")
+        @PostMapping("/linkCard")
     public ResponseEntity<String> linkCardToUser(@RequestBody CardLinkRequest request) {
         String result = cardService.linkCardToUser(request.getCardNumber(),
                 request.getCardHolderName(), request.getExpiryDate(), request.getCvv());
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/getCard")
+    public ResponseEntity<List<CardDto>> getLinkedCards() {
+        List<CardDto> cards = cardService.getLinkedCards();
+        return ResponseEntity.ok(cards);
+    }
+
+    @DeleteMapping("/unlinkCard/{cardId}")
+    public ResponseEntity<String> unlinkCard(@PathVariable Long cardId) {
+        String result = cardService.unlinkCard(cardId);
+        return ResponseEntity.ok(result);
+    }
+
+
+    @PostMapping("/addFavoriteMenu")
+    public ResponseEntity<FavoriteDto> addFavorite(@RequestParam Long menuId) {
+        try {
+            FavoriteDto favoriteDto = favoriteService.addFavorite(menuId);
+            return ResponseEntity.ok(favoriteDto);
+        } catch (MenuNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/getFavoriteMenu")
+    public ResponseEntity<List<MenuDetailsDto>> getFavoritesForCurrentUser() {
+        try {
+            log.info("Получение избранных меню для текущего пользователя");
+            List<MenuDetailsDto> favoriteMenus = favoriteService.getFavoritesForCurrentUser();
+            return ResponseEntity.ok(favoriteMenus);
+        } catch (UsernameNotFoundException e) {
+            log.error("Текущий пользователь не найден", e);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Ошибка при получении избранных меню для текущего пользователя", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

@@ -304,10 +304,6 @@ public class RecipeServiceImpl implements RecipesService {
                             .imageBase64(recipe.getImageBase64())
                             .createdBy(recipe.getCreatedBy())
                             .createdAt(recipe.getCreatedAt())
-                            .lastUpdatedBy(recipe.getLastUpdatedBy())
-                            .lastUpdatedAt(recipe.getLastUpdatedAt())
-                            .deletedBy(recipe.getDeletedBy())
-                            .deletedAt(recipe.getDeletedAt())
                             .build())
                     .collect(Collectors.toList());
 
@@ -355,10 +351,6 @@ public class RecipeServiceImpl implements RecipesService {
                         .imageBase64(recipes.getImageBase64())
                         .createdBy(recipes.getCreatedBy())
                         .createdAt(recipes.getCreatedAt())
-                        .lastUpdatedBy(recipes.getLastUpdatedBy())
-                        .lastUpdatedAt(recipes.getLastUpdatedAt())
-                        .deletedBy(recipes.getDeletedBy())
-                        .deletedAt(recipes.getDeletedAt())
                         .build();
                 recipesDtos.add(recipesDto);
             }

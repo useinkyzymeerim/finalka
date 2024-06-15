@@ -35,7 +35,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                     .orElseThrow(() -> new IllegalArgumentException("Корзина не найдена"));
             User user = cart.getUser();
 
-            if (cart.getProductOfShops().isEmpty()) {
+            if (cart.getProducts().isEmpty()) {
                 throw new IllegalStateException("Корзина пуста. Нечего покупать.");
             }
 
@@ -53,7 +53,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                 throw new IllegalStateException("Недостаточно средств на банковском счете");
             }
 
-            for (ProductOfShop cartProduct : cart.getProductOfShops()) {
+            for (ProductOfShop cartProduct : cart.getProducts()) {
                 if (cartProduct.getQuantity() > cartProduct.getQuantityInStock()) {
                     throw new IllegalStateException("Недостаточное количество продукта \"" + cartProduct.getProductName() + "\" в наличии на складе");
                 }
@@ -69,7 +69,7 @@ public class PurchaseServiceImpl implements PurchaseService {
             purchase.setTotalPrice(totalPrice);
 
             List<ProductOfShop> purchasedProducts = new ArrayList<>();
-            for (ProductOfShop cartProduct : cart.getProductOfShops()) {
+            for (ProductOfShop cartProduct : cart.getProducts()) {
                 productOfShopService.decreaseProductQuantityInStock(cartProduct.getId(), cartProduct.getQuantity());
                 purchasedProducts.add(cartProduct);
             }
@@ -82,7 +82,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                 productOfShopRepo.save(product);
             }
 
-            cart.getProductOfShops().clear();
+            cart.getProducts().clear();
             cart.setTotalPrice(0.0);
             cartRepository.save(cart);
         } catch (IllegalArgumentException | IllegalStateException ex) {
