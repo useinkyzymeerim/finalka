@@ -8,4 +8,4 @@ VALUES (nextval('card_seq'), false, 1, null, '4563829364723938', 'ALIMJANOV AZAT
        (nextval('card_seq'), false, 7, null, '4562820938473944', 'MAMASADYKOVA AYZAT', '903', '11/26'),
        (nextval('card_seq'), false, 8, null, '2975638200184648', 'JOLDOSHEVA MIRINA', '227', '06/27'),
        (nextval('card_seq'), false, 9, null, '8472760382912759', 'ALIEVA MALIKA', '647', '02/26'),
-       (nextval('card_seq'), false, 10, null, '436789927217634', 'ABDYLDAEV ERLAN', '503', '08/28'),
+       (nextval('card_seq'), false, 10, null, '436789927217634', 'ABDYLDAEV ERLAN', '503', '08/28');
