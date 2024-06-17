@@ -157,7 +157,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     // Фильтрация продуктов по типу продукта (например, фрукты, овощи, мясо, рыба и т.д.)
     public List<ProductOfShopDto> filterProductsByType(String type) {
         try {
-            List<ProductOfShop> filteredProducts = productOfShopRepo.findByType(type);
+            List<ProductOfShop> filteredProducts = productOfShopRepo.findByTypeIgnoreCase(type);
             return filteredProducts.stream()
                     .map(product -> modelMapper.map(product, ProductOfShopDto.class))
                     .collect(Collectors.toList());
