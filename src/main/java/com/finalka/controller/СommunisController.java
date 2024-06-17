@@ -21,6 +21,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -398,7 +400,8 @@ public class СommunisController {
     })
     @GetMapping("/filterByTypeProduct")
     public List<ProductOfShopDto> filterProductsByTypeProduct(@RequestParam String type) {
-        return productOfShopService.filterProductsByType(type);
+        String decodedType = URLDecoder.decode(type, StandardCharsets.UTF_8);
+        return productOfShopService.filterProductsByType(decodedType);
     }
 
 

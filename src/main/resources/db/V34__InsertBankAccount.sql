@@ -8,4 +8,4 @@ VALUES (nextval('bank_account_seq'), 10000.00, '859456789'),
        (nextval('bank_account_seq'), 10000.00, '738633389'),
        (nextval('bank_account_seq'), 10000.00, '357238021'),
        (nextval('bank_account_seq'), 10000.00, '217812926'),
-       (nextval('bank_account_seq'), 10000.00, '217292971'),
+       (nextval('bank_account_seq'), 10000.00, '217292971');
