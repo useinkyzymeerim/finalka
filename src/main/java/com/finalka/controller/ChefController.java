@@ -101,6 +101,18 @@ public class ChefController {
         return recipeService.addRecipeToMenu(menuRecipeRequestDto);
     }
 
+    @Operation(summary = "Этот роут для обновления рецептов")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
+
     @PutMapping("/update")
     public String updateRecipe(@RequestBody RecipeUpdateDTO recipeUpdateDTO) {
         try {
@@ -113,21 +125,21 @@ public class ChefController {
         }
     }
 
+    @Operation(summary = "Этот роут удаляет продукт из рецепта ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @DeleteMapping("/{recipeId}/products/{productId}")
-    public ResponseEntity<String> removeProductFromRecipe(@PathVariable Long recipeId, @PathVariable Long productId) {
-        try {
+    public String removeProductFromRecipe(@PathVariable Long recipeId, @PathVariable Long productId) {
             recipeService.removeProductFromRecipe(recipeId, productId);
-            return ResponseEntity.ok("Связь продукта с рецептом успешно удалена");
-        } catch (RecipeNotFoundException | ProductNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (RecipeDeletedException | ProductDeletedException e) {
-            return ResponseEntity.status(HttpStatus.GONE).body(e.getMessage());
-        } catch (RecipeProductLinkNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (RecipeProductLinkRemovalException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Unexpected error occurred: " + e.getMessage());
-        }
+            return "Связь продукта с рецептом успешно удалена";
+
     }
 }

@@ -44,7 +44,7 @@ public class СommunisController {
     private final UserService userService;
     private final CardService cardService;
     private final FavoriteService favoriteService;
-    private final UserRepo userRepo;
+
 
     @ApiResponses(value = {
             @ApiResponse(
@@ -457,65 +457,144 @@ public class СommunisController {
     }
 
 
+    @Operation(summary = "Этот роут для обновления данных пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @PutMapping("/update")
     public UserDto updateUser(@RequestBody UpdateUserDto updateUserDto) throws InvalidUserDataException, UnauthorizedException {
         return userService.updateUser(updateUserDto);
     }
+
+    @Operation(summary = "Этот роут для запроса сброса пароля ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @PostMapping("/password-reset-request")
     public void requestPasswordReset(@RequestBody ResetPasswordRequest request) {
         userService.generateResetToken(request.getEmail());
     }
 
+    @Operation(summary = "Этот роут для сброса пароля ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @PostMapping("/reset-password")
     public void resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
         userService.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
     }
 
-        @PostMapping("/linkCard")
-    public ResponseEntity<String> linkCardToUser(@RequestBody CardLinkRequest request) {
+    @Operation(summary = "Этот роут для привязки банковской карты")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
+    @PostMapping("/linkCard")
+    public String linkCardToUser(@RequestBody CardLinkRequest request) {
         String result = cardService.linkCardToUser(request.getCardNumber(),
                 request.getCardHolderName(), request.getExpiryDate(), request.getCvv());
-        return ResponseEntity.ok(result);
+        return result;
     }
 
+    @Operation(summary = "Этот роут возвращает купленые  продукты по айди покупки")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @GetMapping("/getCard")
-    public ResponseEntity<List<CardDto>> getLinkedCards() {
+    public List<CardDto> getLinkedCards() {
         List<CardDto> cards = cardService.getLinkedCards();
-        return ResponseEntity.ok(cards);
+        return cards ;
     }
 
+
+
+    @Operation(summary = "Этот роут для отвязки карты ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @DeleteMapping("/unlinkCard/{cardId}")
-    public ResponseEntity<String> unlinkCard(@PathVariable Long cardId) {
+    public String unlinkCard(@PathVariable Long cardId) {
         String result = cardService.unlinkCard(cardId);
-        return ResponseEntity.ok(result);
+        return result;
     }
 
 
+    @Operation(summary = "Этот роут для добовления меню в избранное ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
     @PostMapping("/addFavoriteMenu")
-    public ResponseEntity<FavoriteDto> addFavorite(@RequestParam Long menuId) {
-        try {
+    public FavoriteDto addFavorite(@RequestParam Long menuId) {
             FavoriteDto favoriteDto = favoriteService.addFavorite(menuId);
-            return ResponseEntity.ok(favoriteDto);
-        } catch (MenuNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+            return favoriteDto;
     }
+
+    @Operation(summary = "Этот роут возвращает список меню в избранном")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
 
     @GetMapping("/getFavoriteMenu")
-    public ResponseEntity<List<MenuDetailsDto>> getFavoritesForCurrentUser() {
-        try {
+    public List<MenuDetailsDto> getFavoritesForCurrentUser() {
             log.info("Получение избранных меню для текущего пользователя");
             List<MenuDetailsDto> favoriteMenus = favoriteService.getFavoritesForCurrentUser();
-            return ResponseEntity.ok(favoriteMenus);
-        } catch (UsernameNotFoundException e) {
-            log.error("Текущий пользователь не найден", e);
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Ошибка при получении избранных меню для текущего пользователя", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+            return favoriteMenus;
+
     }
 }
