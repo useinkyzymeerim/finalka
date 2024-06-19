@@ -3,9 +3,11 @@ package com.finalka.service.impl;
 
 import com.finalka.dto.UpdateUserDto;
 import com.finalka.dto.UserDto;
+import com.finalka.entity.Cart;
 import com.finalka.entity.User;
 import com.finalka.exception.*;
 import com.finalka.mapper.UserMapper;
+import com.finalka.repo.CartRepo;
 import com.finalka.repo.UserRepo;
 import com.finalka.service.UserService;
 import jakarta.transaction.Transactional;
@@ -38,6 +40,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
     private final UserMapper userMapper;
+    private final CartRepo cartRepo;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -63,9 +66,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             User user = userMapper.toEntity(userDto);
             user = userRepo.save(user);
 
+            Cart cart = new Cart();
+            cart.setUser(user);
+            cart = cartRepo.save(cart);
+
             sendRegistrationEmail(userDto);
 
-            return user.getId();
+            return cart.getId(); // Возвращаем ID корзины
         } catch (DataIntegrityViolationException e) {
             throw new InvalidUserDataException("Ошибка целостности данных: " + e.getMessage());
         } catch (MailException e) {
@@ -76,8 +83,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new RuntimeException("Не удалось сохранить пользователя", e);
         }
     }
-
-
 
     private void sendRegistrationEmail(UserDto userDto) throws EmailSendingException {
         try {

@@ -1,9 +1,7 @@
 package com.finalka.controller;
 
 import com.finalka.dto.*;
-import com.finalka.entity.User;
 import com.finalka.exception.*;
-import com.finalka.repo.UserRepo;
 import com.finalka.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -15,9 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -68,7 +63,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -83,7 +78,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ReviewDTO.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -122,7 +117,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = RecipesDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Меню с рецептами не найдено")
@@ -138,7 +133,7 @@ public class СommunisController {
                     responseCode = "201",
                     description = "Меню создан успешно ",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = MenuDTO.class))}),
+                            schema = @Schema(implementation = Long.class))}),
             @ApiResponse(
                     responseCode = "400",
                     description = "Меню не был добавлен в базу")
@@ -197,6 +192,7 @@ public class СommunisController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -221,37 +217,13 @@ public class СommunisController {
         }
     }
 
-    @Operation(summary = "Этот роут для создания корзины в магазине ")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Успешная операция",
-                    content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Не найдено")
-    })
-    @PostMapping("/saveCart")
-    public ResponseEntity<Long> saveCart(@RequestBody CreateCartDto createCartDto) {
-        try {
-            Long cartId = cartService.createCart(createCartDto);
-            return new ResponseEntity<>(cartId, HttpStatus.CREATED);
-        } catch (UserNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не удалось создать корзину", e);
-        }
-    }
-
-
     @Operation(summary = "Этот роут для обновления количество продуктов в корзине по айди корзины")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = CartDetailDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -278,7 +250,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = CartDetailDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -299,7 +271,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -322,7 +294,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = void.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -340,7 +312,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ProductOfShopDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -357,7 +329,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ProductOfShopDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -375,7 +347,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ProductOfShopDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -393,7 +365,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ProductOfShopDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -411,7 +383,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ProductOfShopDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -428,7 +400,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = void.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -445,7 +417,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = PurchaseDetailsDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -463,7 +435,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = UserDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -479,7 +451,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = void.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -496,7 +468,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = void.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -512,7 +484,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -530,7 +502,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = CardDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -549,7 +521,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -567,7 +539,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = FavoriteDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -584,7 +556,7 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = MenuDetailsDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")

@@ -41,21 +41,22 @@ public class PermitAllController {
                     description = "Не найдено")
     })
     @PostMapping("/registration")
-    public Long save(@Valid @RequestBody UserDto userToSave) {
+    public ResponseEntity<Long> save(@Valid @RequestBody UserDto userToSave) {
         try {
-            return service.save(userToSave);
+            Long cartId = service.save(userToSave);
+            return ResponseEntity.status(HttpStatus.CREATED).body(cartId);
         } catch (UsernameAlreadyExistsException e) {
-
             log.error("Ошибка регистрации: имя пользователя уже существует.", e);
-            return null;
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (EmailSendingException e) {
-
             log.error("Ошибка регистрации: не удалось отправить письмо с подтверждением.", e);
-            return null;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (InvalidUserDataException e) {
-
             log.error("Ошибка регистрации: недопустимые данные пользователя.", e);
-            return null;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            log.error("Неизвестная ошибка при регистрации.", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
