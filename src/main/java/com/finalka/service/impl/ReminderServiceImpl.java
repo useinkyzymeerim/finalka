@@ -36,6 +36,7 @@ public class ReminderServiceImpl implements ReminderService {
     private final MailService mailService;
     private final UserRepo userRepo;
 
+    @Override
     @Transactional
     public Long setReminder(int hour, int minute, String message) {
         log.info("Установка напоминания на {}:{}", hour, minute);
@@ -73,10 +74,11 @@ public class ReminderServiceImpl implements ReminderService {
         return savedReminder.getId();
     }
 
-
     private LocalDateTime calculateNextReminderTime(int hour, int minute) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime reminderTime = now.withHour(hour).withMinute(minute).withSecond(0).withNano(0);
+        // Вычитаем 6 часов
+        reminderTime = reminderTime.minusHours(6);
         if (now.compareTo(reminderTime) > 0) {
             reminderTime = reminderTime.plusDays(1);
         }
@@ -85,7 +87,7 @@ public class ReminderServiceImpl implements ReminderService {
 
     private void scheduleReminderTask(Long reminderId, String message, String email, int hour, int minute) {
         LocalDateTime reminderTime = calculateNextReminderTime(hour, minute);
-        long delay = Duration.between(LocalDateTime.now(), reminderTime).toMillis();
+        long initialDelay = Duration.between(LocalDateTime.now(), reminderTime).toMillis();
 
         Runnable task = () -> {
             try {
@@ -97,9 +99,9 @@ public class ReminderServiceImpl implements ReminderService {
             }
         };
 
-        ScheduledFuture<?> future = executorService.schedule(task, delay, TimeUnit.MILLISECONDS);
+        ScheduledFuture<?> future = executorService.schedule(task, initialDelay, TimeUnit.MILLISECONDS);
         reminders.put(reminderId, future);
-        log.info("Запланированное первое напоминание с задержкой: {} ms", delay);
+        log.info("Запланированное первое напоминание с задержкой: {} ms", initialDelay);
     }
 
     private void scheduleNextReminder(Long reminderId, String message, String email, int hour, int minute) {
@@ -121,30 +123,20 @@ public class ReminderServiceImpl implements ReminderService {
         log.info("Следующее напоминание по расписанию с задержкой: {} ms", delay);
     }
 
+    @Override
+    @Transactional
     public void cancelReminder(Long reminderId) {
         ScheduledFuture<?> future = reminders.get(reminderId);
         if (future != null) {
             future.cancel(false);
             reminders.remove(reminderId);
+        } else {
+            log.warn("Напоминание с идентификатором {} не найдено для отмены", reminderId);
+            throw new EntityNotFoundException("Напоминание не найдено с идентификатором: " + reminderId);
         }
     }
 
-    private void sendNotification(Long reminderId, String message, String email) throws MessagingException {
-        log.info("Отправка уведомления на электронную почту: {}", email);
-        mailService.sendSimpleMessage(email, "Напоминание", message);
-        log.info("Уведомление успешно отправлено на {}", email);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ReminderDto> getAllReminders() {
-        log.info("Получение всех активных напоминаний");
-        List<ReminderDto> reminders = reminderRepo.findAllActive().stream()
-                .map(ReminderDto::fromReminder)
-                .collect(Collectors.toList());
-        log.info("Извлечено {} активных напоминаний", reminders.size());
-        return reminders;
-    }
-
+    @Override
     @Transactional
     public void updateReminder(Long reminderId, CreateReminderDto reminderDto) {
         log.info("Обновление напоминания с идентификатором: {}", reminderId);
@@ -157,8 +149,7 @@ public class ReminderServiceImpl implements ReminderService {
                 throw new EntityNotFoundException("Напоминание не найдено с идентификатором: " + reminderId);
             }
 
-            long delay = Duration.between(LocalDateTime.now(), calculateNextReminderTime(reminderDto.getHour(), reminderDto.getMinute())).toMillis();
-            LocalDateTime reminderTime = LocalDateTime.now().plusSeconds(delay / 1000);
+            LocalDateTime reminderTime = calculateNextReminderTime(reminderDto.getHour(), reminderDto.getMinute());
 
             reminder.setReminderTime(reminderTime);
             reminder.setMessage(reminderDto.getMessage());
@@ -183,6 +174,7 @@ public class ReminderServiceImpl implements ReminderService {
         }
     }
 
+    @Override
     @Transactional
     public void deleteReminder(Long reminderId) {
         log.info("Удаление напоминания с идентификатором: {}", reminderId);
@@ -205,6 +197,7 @@ public class ReminderServiceImpl implements ReminderService {
         }
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<ReminderDto> getUserReminders() {
         log.info("СТАРТ: ReminderServiceImpl - getUserReminders()");
@@ -228,5 +221,11 @@ public class ReminderServiceImpl implements ReminderService {
 
         log.info("КОНЕЦ: ReminderServiceImpl - getUserReminders()");
         return reminderDtos;
+    }
+
+    private void sendNotification(Long reminderId, String message, String email) throws MessagingException {
+        log.info("Отправка уведомления на электронную почту: {}", email);
+        mailService.sendSimpleMessage(email, "Напоминание", message);
+        log.info("Уведомление успешно отправлено на {}", email);
     }
 }
