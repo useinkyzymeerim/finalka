@@ -129,21 +129,7 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Не удалось установить напоминание", e);
         }
     }
-    @Operation(summary = "Этот роут возвращает все напоминание")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Успешная операция",
-                    content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = ReminderDto.class)))}),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Не найдено")
-    })
-    @GetMapping("/getAllReminders")
-    public List<ReminderDto> getAllReminders() {
-        return reminderService.getAllReminders();
-    }
+
     @Operation(summary = "Этот роут отменяет  напоминание по айди пользователя ")
     @ApiResponses(value = {
             @ApiResponse(
@@ -215,7 +201,7 @@ public class UserController {
         if (token == null || !token.startsWith("Bearer ")) {
             throw new UnauthorizedException("Пользаватель не найден");
         }
-        return reminderService.getAllReminders();
+        return reminderService.getUserReminders();
     }
 }
 
