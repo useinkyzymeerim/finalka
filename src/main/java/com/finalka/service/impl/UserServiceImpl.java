@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
             sendRegistrationEmail(userDto);
 
-            return cart.getId(); // Возвращаем ID корзины
+            return cart.getId();
         } catch (DataIntegrityViolationException e) {
             throw new InvalidUserDataException("Ошибка целостности данных: " + e.getMessage());
         } catch (MailException e) {
@@ -150,11 +150,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             User user = userRepo.findByEmail(email)
                     .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден с помощью электронной почты: " + email));
 
-            String token = UUID.randomUUID().toString();
-            user.setResetToken(token);
+            String resetCode = generateRandomCode(6);
+            user.setResetToken(resetCode);
             userRepo.save(user);
 
-            sendResetEmail(user.getEmail(), token);
+            sendResetEmail(user.getEmail(), resetCode);
         } catch (UsernameNotFoundException e) {
             log.error("Пользователь не найден: {}", email, e);
             throw new ResourceNotFoundException("Пользователь не найден с помощью электронной почты: " + email, e);
@@ -162,19 +162,28 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             log.error("Ошибка отправки почты на адрес: {}", email, e);
             throw new EmailSendingException("Ошибка отправки почты на адрес: " + email, e);
         } catch (RuntimeException e) {
-            log.error("Ошибка генерации токена сброса для пользователя: {}", email, e);
-            throw new RuntimeException("Ошибка генерации токена сброса для пользователя: " + email, e);
+            log.error("Ошибка генерации одноразового кода для пользователя: {}", email, e);
+            throw new RuntimeException("Ошибка генерации одноразового кода для пользователя: " + email, e);
         }
     }
 
+    private String generateRandomCode(int length) {
+        Random random = new Random();
+        StringBuilder code = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            code.append(random.nextInt(10));
+        }
+        return code.toString();
+    }
 
-    private void sendResetEmail(String email, String token) {
+    private void sendResetEmail(String email, String resetCode) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(email);
         mailMessage.setSubject("Запрос на сброс пароля");
-        mailMessage.setText("Чтобы сбросить пароль, используйте следующий токен:\n" + token);
+        mailMessage.setText("Ваш одноразовый код для сброса пароля: " + resetCode);
         mailSender.send(mailMessage);
     }
+
 
     @Override
     public void resetPassword(String token, String newPassword) {
