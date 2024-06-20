@@ -1,6 +1,7 @@
 package com.finalka.controller;
 
 import com.finalka.dto.*;
+import com.finalka.entity.Recipes;
 import com.finalka.exception.*;
 import com.finalka.service.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,12 +11,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -568,5 +572,18 @@ public class СommunisController {
             List<MenuDetailsDto> favoriteMenus = favoriteService.getFavoritesForCurrentUser();
             return favoriteMenus;
 
+    }
+
+    @Operation(summary = "Поиск рецептов по названию", description = "Возвращает список рецептов, соответствующих частичному совпадению по названию")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список рецептов успешно получен",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = RecipesSearchDto.class))}),
+            @ApiResponse(responseCode = "400", description = "Неверный запрос"),
+            @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
+    })
+    @GetMapping("/recipes/search")
+    public List<RecipesSearchDto> searchRecipes(@RequestParam String name) {
+        return recipeService.searchRecipesByName(name);
     }
 }

@@ -10,7 +10,11 @@ import com.finalka.service.RecipesService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -287,6 +291,28 @@ public class RecipeServiceImpl implements RecipesService {
                 .build();
 
     }
+
+        @Transactional
+        public List<RecipesSearchDto> searchRecipesByName(String name) {
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException("The search name must not be empty");
+            }
+
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Recipes> recipesPage = recipesRepo.findByNameOfFoodContainingIgnoreCase(name, pageable);
+
+            return recipesPage.getContent().stream()
+                    .map(this::mapToRecipesSearchDto)
+                    .collect(Collectors.toList());
+        }
+
+        private RecipesSearchDto mapToRecipesSearchDto(Recipes recipe) {
+            return new RecipesSearchDto(
+                    recipe.getNameOfFood(),
+                    recipe.getImageBase64(),
+                    recipe.getCreatedBy()
+            );
+        }
 
     @Transactional
     @Override

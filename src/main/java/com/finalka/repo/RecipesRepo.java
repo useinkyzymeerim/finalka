@@ -4,6 +4,8 @@ import com.finalka.dto.RecipeDetailsDTO;
 import com.finalka.entity.Products;
 
 import com.finalka.entity.Recipes;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +24,7 @@ public interface RecipesRepo extends JpaRepository<Recipes,Long> {
     List<Recipes> findByProductNameContainingIgnoreCaseAndDeletedAtIsNull(@Param("productName") String productName);
     List<Recipes> findByCreatedByAndDeletedAtIsNull(String username);
 
-    @Query("SELECT COUNT(rp) FROM Recipes r JOIN r.recipesWithProducts rp WHERE r.id = :recipeId")
-    int countProductsInRecipe(@Param("recipeId") Long recipeId);
+    Page<Recipes> findByNameOfFoodContainingIgnoreCase(String name, Pageable pageable);
+
 }
 

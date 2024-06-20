@@ -20,4 +20,5 @@ public interface RecipesService {
     @Transactional
     List<RecipesDto> findAllByChef(String chefUsername);
     void removeProductFromRecipe(Long recipeId, Long productId);
+    List<RecipesSearchDto> searchRecipesByName(String name);
 }
