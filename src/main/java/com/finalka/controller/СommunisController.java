@@ -140,14 +140,9 @@ public class СommunisController {
     })
     @Operation(summary = "Роут для создание меню")
     @PostMapping("/createMenu")
-    public ResponseEntity<Long> saveMenu(@RequestBody CreateMenuDto menuDTO){
-        try {
+    public Long saveMenu(@RequestBody CreateMenuDto menuDTO){
             CreateMenuDto savedMenuDTO = menuService.save(menuDTO);
-            return new ResponseEntity<>(savedMenuDTO.getId(), HttpStatus.CREATED);
-        } catch (MenuSaveException e) {
-            log.error("Не удалось создать меню: {}");
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
+            return savedMenuDTO.getId();
     }
 
     @ApiResponses(value = {
@@ -438,6 +433,7 @@ public class СommunisController {
                     responseCode = "404",
                     description = "Не найдено")
     })
+
     @PutMapping("/update")
     public UserDto updateUser(@RequestBody UpdateUserDto updateUserDto) throws InvalidUserDataException, UnauthorizedException {
         return userService.updateUser(updateUserDto);
@@ -460,11 +456,24 @@ public class СommunisController {
         userService.generateResetToken(request.getEmail());
     }
 
+
+    @Operation(summary = "Этот роут для подтверждения кода  ")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешная операция",
+                    content = {@Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Не найдено")
+    })
+
     @PostMapping("/validate-token")
-    public ResponseEntity<String> validateResetToken(@RequestBody Map<String, String> request) {
+    public String validateResetToken(@RequestBody Map<String, String> request) {
         String token = request.get("token");
         userService.validateResetToken(token);
-        return ResponseEntity.ok("Token validated");
+        return "Код подтвержден";
     }
 
     @Operation(summary = "Этот роут для сброса пароля ")
@@ -473,17 +482,18 @@ public class СommunisController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = void.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
     })
+
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
+    public String resetPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         String newPassword = request.get("newPassword");
         userService.resetPassword(email, newPassword);
-        return ResponseEntity.ok("Password reset successfully");
+        return "Пароль изменен";
     }
 
     @Operation(summary = "Этот роут для привязки банковской карты")
