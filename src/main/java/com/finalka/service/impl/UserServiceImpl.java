@@ -184,24 +184,37 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         mailSender.send(mailMessage);
     }
 
-
     @Override
-    public void resetPassword(String token, String newPassword) {
+    public void validateResetToken(String token) {
         try {
             User user = userRepo.findByResetToken(token)
                     .orElseThrow(() -> new InvalidTokenException("Недействительный или просроченный token."));
 
-            String encodedPassword = passwordEncoder.encode(newPassword);
-            user.setPassword(encodedPassword);
-
-            user.setResetToken(null);
-            userRepo.save(user);
         } catch (InvalidTokenException e) {
-            log.error("Ошибка при сбросе пароля: {}", e.getMessage());
+            log.error("Недействительный или просроченный token: {}", token, e);
             throw e;
         } catch (RuntimeException e) {
-            log.error("Внутренняя ошибка сервера при сбросе пароля", e);
-            throw new RuntimeException("Внутренняя ошибка сервера при сбросе пароля", e);
+            log.error("Ошибка при проверке одноразового кода: {}", token, e);
+            throw new RuntimeException("Ошибка при проверке одноразового кода: " + token, e);
+        }
+    }
+
+    @Override
+    public void resetPassword(String email, String newPassword) {
+        try {
+            User user = userRepo.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден с помощью электронной почты: " + email));
+
+            if (user.getResetToken() == null) {
+                throw new IllegalArgumentException("Код подтверждения не найден для пользователя с почтой: " + email);
+            }
+
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedPassword);
+            user.setResetToken(null);
+            userRepo.save(user);
+        } catch (UsernameNotFoundException e) {
+            throw new ResourceNotFoundException("Пользователь не найден с помощью электронной почты: " + email, e);
         }
     }
 }

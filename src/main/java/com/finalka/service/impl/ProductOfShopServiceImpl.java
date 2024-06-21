@@ -161,6 +161,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     }
 
     // Фильтрация продуктов по типу продукта (например, фрукты, овощи, мясо, рыба и т.д.)
+    @Transactional(readOnly = true)
     public List<ProductOfShopDto> filterProductsByType(String type) {
         try {
             List<ProductOfShop> filteredProducts = productOfShopRepo.findByTypeIgnoreCase(type);
