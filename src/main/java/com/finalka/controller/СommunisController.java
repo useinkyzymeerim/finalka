@@ -24,6 +24,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.hibernate.query.sqm.tree.SqmNode.log;
 
@@ -466,6 +467,13 @@ public class СommunisController {
         userService.generateResetToken(request.getEmail());
     }
 
+    @PostMapping("/validate-token")
+    public ResponseEntity<String> validateResetToken(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        userService.validateResetToken(token);
+        return ResponseEntity.ok("Token validated");
+    }
+
     @Operation(summary = "Этот роут для сброса пароля ")
     @ApiResponses(value = {
             @ApiResponse(
@@ -478,8 +486,11 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @PostMapping("/reset-password")
-    public void resetPassword(@RequestBody ResetPasswordDto resetPasswordDto) {
-        userService.resetPassword(resetPasswordDto.getToken(), resetPasswordDto.getNewPassword());
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String newPassword = request.get("newPassword");
+        userService.resetPassword(email, newPassword);
+        return ResponseEntity.ok("Password reset successfully");
     }
 
     @Operation(summary = "Этот роут для привязки банковской карты")

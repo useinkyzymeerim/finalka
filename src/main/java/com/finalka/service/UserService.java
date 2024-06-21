@@ -14,5 +14,6 @@ public interface UserService {
     UserDto getById(Long id);
     UserDto updateUser(UpdateUserDto updateUserDto) throws UnauthorizedException, InvalidUserDataException;
     void generateResetToken(String email);
-    void resetPassword(String token, String newPassword);
+    void resetPassword(String email, String newPassword);
+    void validateResetToken(String token);
 }
