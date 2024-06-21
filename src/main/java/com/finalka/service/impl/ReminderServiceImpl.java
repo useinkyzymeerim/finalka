@@ -77,7 +77,7 @@ public class ReminderServiceImpl implements ReminderService {
     private LocalDateTime calculateNextReminderTime(int hour, int minute) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime reminderTime = now.withHour(hour).withMinute(minute).withSecond(0).withNano(0);
-        reminderTime = reminderTime.plusHours(6);
+        reminderTime = reminderTime.minusHours(6);
         if (now.compareTo(reminderTime) > 0) {
             reminderTime = reminderTime.plusDays(1);
         }
