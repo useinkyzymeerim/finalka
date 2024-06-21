@@ -1,7 +1,6 @@
 package com.finalka.controller;
 
 import com.finalka.dto.*;
-import com.finalka.entity.Recipes;
 import com.finalka.exception.*;
 import com.finalka.service.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,15 +10,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -177,7 +172,6 @@ public class СommunisController {
         }
     }
 
-
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -189,13 +183,12 @@ public class СommunisController {
                     description = "Меню не найден")
     })
     @Operation(summary = "Роут для поиска меню по id")
+
+
     @GetMapping("/menu/{menuId}")
-    public ResponseEntity<MenuDTO> findMenuById(@PathVariable Long id){
-        try {
-            return new ResponseEntity<>(menuService.findById(id), HttpStatus.OK);
-        } catch (NullPointerException nullPointerException){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public MenuDTO findMenuById(@PathVariable Long id){
+        return menuService.findById(id);
+
     }
 
     @ApiResponses(value = {
@@ -358,9 +351,9 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @GetMapping("/findByName")
-    public ResponseEntity<List<ProductOfShopDto>> getProductsByName(@RequestParam String productName) {
+    public List<ProductOfShopDto> getProductsByName(@RequestParam String productName) {
         List<ProductOfShopDto> productDtos = productOfShopService.getProductsByName(productName);
-        return ResponseEntity.ok(productDtos);
+        return productDtos;
     }
 
 

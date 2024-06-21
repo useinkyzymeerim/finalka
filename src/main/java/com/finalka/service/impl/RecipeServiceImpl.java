@@ -59,6 +59,11 @@ public class RecipeServiceImpl implements RecipesService {
 
             RecipeDetailsDTO recipeDetailsDTO = RecipeDetailsDTO.builder()
                     .recipeName(recipe.getNameOfFood())
+                    .portion(recipe.getPortion())
+                    .categories(recipe.getCategories())
+                    .cookingTime(recipe.getCookingTime())
+                    .description(recipe.getDescription())
+                    .linkOfVideo(recipe.getLinkOfVideo())
                     .productDetailsDtos(productDetailsDtos)
                     .quantityOfProduct(recipe.getQuantityOfProduct())
                     .build();

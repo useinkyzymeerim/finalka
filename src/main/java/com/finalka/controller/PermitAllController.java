@@ -5,7 +5,6 @@ import com.finalka.dto.UserDto;
 import com.finalka.exception.EmailSendingException;
 import com.finalka.exception.InvalidUserDataException;
 import com.finalka.exception.UsernameAlreadyExistsException;
-import com.finalka.repo.UserRepo;
 import com.finalka.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -20,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -38,7 +36,7 @@ public class PermitAllController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = UserDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -67,8 +65,6 @@ public class PermitAllController {
     public String getServerTime() {
         LocalDateTime now = LocalDateTime.now();
         log.info("Текущее время сервера: {}", now);
-
-        // Форматирование времени для удобного отображения
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return now.format(formatter);
     }

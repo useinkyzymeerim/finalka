@@ -2,12 +2,10 @@ package com.finalka.controller;
 
 
 import com.finalka.dto.*;
-import com.finalka.exception.InvalidUserDataException;
 import com.finalka.exception.UnauthorizedException;
 import com.finalka.service.MenuService;
 import com.finalka.service.RecipesService;
 import com.finalka.service.ReviewService;
-import com.finalka.service.UserService;
 import com.finalka.service.impl.ReminderServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -19,7 +17,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -35,7 +32,6 @@ public class UserController {
     private final RecipesService recipeService;
     private final MenuService menuService;
     private final ReviewService reviewService;
-    private final UserService service;
     private final ReminderServiceImpl reminderService;
 
 
@@ -51,13 +47,12 @@ public class UserController {
 
     })
     @Operation(summary = "Этот роут возвращает Рецепты с продуктами по ID")
+
     @GetMapping("/{recipeId}/products")
     public RecipeDetailsDTO getRecipeById(@PathVariable Long recipeId) {
         RecipeDetailsDTO recipeDetailsDTO = recipeService.getRecipeWithProductsById(recipeId);
         return recipeDetailsDTO;
     }
-
-
 
     @Operation(summary = "Этот роут для поиска рецепта по нескольким продуктам")
     @ApiResponses(value = {
@@ -65,7 +60,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = RecipeWithProductDTO.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -82,7 +77,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = List.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -100,7 +95,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ReviewDTO.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -116,7 +111,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = Long.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -136,7 +131,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -152,7 +147,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Напоминание найден и успешно обновлен",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = MenuDTO.class))}),
+                            schema = @Schema(implementation = void.class))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Напоминание не найден")
@@ -181,8 +176,9 @@ public class UserController {
                     description = "Напоминание не найден")
     })
     @DeleteMapping("/delete/{reminderId}")
-    public void deleteReminder(@PathVariable Long reminderId) {
+    public String deleteReminder(@PathVariable Long reminderId) {
         reminderService.deleteReminder(reminderId);
+        return "Напоминание успешно удалено";
     }
 
     @ApiResponses(value = {
@@ -190,7 +186,7 @@ public class UserController {
                     responseCode = "200",
                     description = "Получены все напоминание пользователя",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = RecipesDto.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = ReminderDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Напоминаний нет")
