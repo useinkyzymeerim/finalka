@@ -1,10 +1,8 @@
 package com.finalka.controller;
 
 import com.finalka.dto.CreateProductOfShopDto;
-import com.finalka.dto.MenuWithRecipeDTO;
 import com.finalka.exception.InvalidProductDataException;
 import com.finalka.exception.ProductAlreadyExistsException;
-import com.finalka.exception.ProductNotFoundException;
 import com.finalka.service.ProductOfShopService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -15,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/admins")
 public class AdminController {
+
     private final ProductOfShopService productOfShopService;
 
     @Operation(summary = "Этот роут для создания(сохранения) продукта в магазине ")
@@ -33,11 +31,12 @@ public class AdminController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = CreateProductOfShopDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
     })
+
     @PostMapping()
     public Long saveProduct(@Validated @RequestBody CreateProductOfShopDto createProductOfShopDto) {
         try {
@@ -53,7 +52,7 @@ public class AdminController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = CreateProductOfShopDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -71,21 +70,17 @@ public class AdminController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class )))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
     })
 
     @DeleteMapping("/delete/{productId}")
-    public ResponseEntity<String> deleteProduct(@PathVariable Long productId) {
-        try {
+    public String deleteProduct(@PathVariable Long productId) {
             productOfShopService.deleteProduct(productId);
-            return ResponseEntity.ok("Товар успешно удален");
-        } catch (ProductNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось удалить продукт: " + e.getMessage());
-        }
+            return "Товар успешно удален";
+
+
     }
 }

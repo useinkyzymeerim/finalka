@@ -3,7 +3,6 @@ package com.finalka.controller;
 import com.finalka.dto.*;
 import com.finalka.exception.*;
 import com.finalka.service.RecipesService;
-import com.finalka.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,16 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.util.List;
-
-import static org.hibernate.query.sqm.tree.SqmNode.log;
 @Tag(name = "Chef API", description = "Тут находятся все роуты для поваров")
 @RestController
 @RequiredArgsConstructor
@@ -35,12 +28,14 @@ public class ChefController {
                     responseCode = "201",
                     description = "Рецепт создан успешно ",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ProductDTO.class))}),
+                            schema = @Schema(implementation = RecipeWithProductDTO.class))}),
             @ApiResponse(
                     responseCode = "400",
                     description = "Рецепт не был добавлен в базу")
     })
+
     @Operation(summary = "Роут для создание рецепта")
+
     @PostMapping
     public Long createRecipeWithProducts(@Valid @RequestBody RecipeWithProductDTO recipeDto) {
         try {
@@ -51,6 +46,7 @@ public class ChefController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
+
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -62,11 +58,13 @@ public class ChefController {
                     description = "Рецепт не найден")
     })
     @Operation(summary = "Роут удаляет рецепт по id")
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteRecipe(@PathVariable Long id) {
-        String response = recipeService.delete(id);
-        return ResponseEntity.ok(response);
+    public String deleteRecipe(@PathVariable Long id) {
+        recipeService.delete(id);
+        return "Рецепт успешно удален";
     }
+
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -80,17 +78,18 @@ public class ChefController {
     @Operation(summary = "Роут возвращает все свои рецепты повара")
 
     @GetMapping("/allByChef")
-    public ResponseEntity<List<RecipesDto>> getAllRecipesForCurrentUser(@RequestHeader("Authorization") String token) {
+    public List<RecipesDto> getAllRecipesForCurrentUser(@RequestHeader("Authorization") String token) {
         List<RecipesDto> recipes = recipeService.findAllByChef(token);
-        return ResponseEntity.ok(recipes);
+        return recipes;
     }
+
     @Operation(summary = "Этот роут добовляет рецепты по айди  в меню айди ")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = RecipeAddProductDto.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -107,7 +106,7 @@ public class ChefController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = RecipeUpdateDTO.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
@@ -131,11 +130,12 @@ public class ChefController {
                     responseCode = "200",
                     description = "Успешная операция",
                     content = {@Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = MenuWithRecipeDTO.class)))}),
+                            array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(
                     responseCode = "404",
                     description = "Не найдено")
     })
+
     @DeleteMapping("/{recipeId}/products/{productId}")
     public String removeProductFromRecipe(@PathVariable Long recipeId, @PathVariable Long productId) {
             recipeService.removeProductFromRecipe(recipeId, productId);
