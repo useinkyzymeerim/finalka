@@ -18,6 +18,8 @@ public class CreateProductOfShopDto {
     @NotBlank(message = "Наименование продукта не должно быть пустым")
     private String productName;
 
+    private byte[] imageBase64;
+
     @NotNull(message = "Цена не должна быть пустой")
     @DecimalMin(value = "0.0", message = "Цена должна быть больше или равна 0")
     private Double price;

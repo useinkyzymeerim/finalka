@@ -66,6 +66,10 @@ public class ProductOfShop {
 
     private boolean inStock;
 
+    @Basic(fetch = FetchType.EAGER)
+    @Lob
+    private byte[] imageBase64;
+
     public void updateInStock() {
         this.inStock = this.quantityInStock > 0;
     }
