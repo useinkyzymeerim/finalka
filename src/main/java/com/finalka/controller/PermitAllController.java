@@ -21,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Tag(name = "Public API", description = "Тут находятся все общие роуты для не авторизованных пользователей")
 @RestController
 @RequiredArgsConstructor
@@ -58,5 +61,15 @@ public class PermitAllController {
             log.error("Неизвестная ошибка при регистрации.", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/server-time")
+    public String getServerTime() {
+        LocalDateTime now = LocalDateTime.now();
+        log.info("Текущее время сервера: {}", now);
+
+        // Форматирование времени для удобного отображения
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return now.format(formatter);
     }
 }
