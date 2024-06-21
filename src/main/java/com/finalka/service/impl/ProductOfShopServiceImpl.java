@@ -27,6 +27,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     private final ProductOfShopRepo productOfShopRepo;
     private final ModelMapper modelMapper;
     @Override
+    @Transactional
     public Long createProduct(CreateProductOfShopDto createProductOfShopDto) throws InvalidProductDataException, ProductAlreadyExistsException {
         try {
             if (productOfShopRepo.existsByProductName(createProductOfShopDto.getProductName())) {
@@ -35,6 +36,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
 
             ProductOfShop product = new ProductOfShop();
             product.setProductName(createProductOfShopDto.getProductName());
+            product.setImageBase64(createProductOfShopDto.getImageBase64());
             product.setPrice(createProductOfShopDto.getPrice());
             product.setQuantity(createProductOfShopDto.getQuantity());
             product.setUnits2Enum(createProductOfShopDto.getUnits2Enum());
@@ -54,12 +56,14 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
 
 
     @Override
+    @Transactional
     public CreateProductOfShopDto updateProduct(Long productId, CreateProductOfShopDto productDTO) throws InvalidProductDataException {
         try {
             ProductOfShop existingProduct = productOfShopRepo.findById(productId)
                     .orElseThrow(() -> new ProductNotFoundException("Продукт с id " + productId + " не найден"));
 
             existingProduct.setProductName(productDTO.getProductName());
+            existingProduct.setImageBase64(productDTO.getImageBase64());
             existingProduct.setPrice(productDTO.getPrice());
             existingProduct.setQuantity(productDTO.getQuantity());
             existingProduct.setUnits2Enum(productDTO.getUnits2Enum());
@@ -73,6 +77,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
             return CreateProductOfShopDto.builder()
                     .id(updatedProduct.getId())
                     .productName(updatedProduct.getProductName())
+                    .imageBase64(updatedProduct.getImageBase64())
                     .price(updatedProduct.getPrice())
                     .quantity(updatedProduct.getQuantity())
                     .units2Enum(updatedProduct.getUnits2Enum())
@@ -104,13 +109,14 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
         }
     }
 
+    @Transactional
     public ProductOfShopDto getProduct(Long productId) {
         ProductOfShop product = productOfShopRepo.findByIdAndDeletedFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
         return modelMapper.map(product, ProductOfShopDto.class);
     }
 
-
+ @Transactional
     public List<ProductOfShopDto> getProductsByName(String productName) {
         List<ProductOfShop> products = productOfShopRepo.findByProductNameIgnoreCaseContainingAndDeletedFalse(productName);
 
@@ -123,7 +129,7 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
                 .collect(Collectors.toList());
     }
 
-    
+    @Transactional
     public List<ProductOfShopDto> getAllProducts() {
         try {
             List<ProductOfShop> products = productOfShopRepo.findAllByDeletedFalse();
