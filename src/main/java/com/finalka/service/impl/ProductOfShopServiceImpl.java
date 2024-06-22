@@ -113,7 +113,17 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
     public ProductOfShopDto getProduct(Long productId) {
         ProductOfShop product = productOfShopRepo.findByIdAndDeletedFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
-        return modelMapper.map(product, ProductOfShopDto.class);
+
+        return ProductOfShopDto.builder()
+                .id(product.getId())
+                .productName(product.getProductName())
+                .price(product.getPrice())
+                .quantity(product.getQuantity())
+                .units2Enum(product.getUnits2Enum())
+                .quantityInStock(product.getQuantityInStock())
+                .type(product.getType())
+                .imageBase64(product.getImageBase64())
+                .build();
     }
 
  @Transactional
@@ -134,7 +144,16 @@ public class ProductOfShopServiceImpl implements ProductOfShopService {
         try {
             List<ProductOfShop> products = productOfShopRepo.findAllByDeletedFalse();
             return products.stream()
-                    .map(product -> modelMapper.map(product, ProductOfShopDto.class))
+                    .map(product -> ProductOfShopDto.builder()
+                            .id(product.getId())
+                            .productName(product.getProductName())
+                            .price(product.getPrice())
+                            .quantity(product.getQuantity())
+                            .units2Enum(product.getUnits2Enum())
+                            .quantityInStock(product.getQuantityInStock())
+                            .type(product.getType())
+                            .imageBase64(product.getImageBase64())
+                            .build())
                     .collect(Collectors.toList());
         } catch (Exception ex) {
             throw new ServiceException("Ошибка при получении продуктов магазина", ex);

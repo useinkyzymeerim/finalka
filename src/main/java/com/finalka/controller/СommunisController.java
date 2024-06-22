@@ -323,8 +323,8 @@ public class СommunisController {
                     description = "Не найдено")
     })
     @GetMapping("/getProductById/{productIdInShop}")
-    public ProductOfShopDto getProductOfShop(@PathVariable Long productId) {
-        return productOfShopService.getProduct(productId);
+    public ProductOfShopDto getProductOfShop(@PathVariable Long productIdInShop) {
+        return productOfShopService.getProduct(productIdInShop);
     }
 
 
